@@ -1,0 +1,17 @@
+{
+    "fileType" : "MORAINE_SHADER",
+
+    "vertexShader" :
+    {
+        "glslSource"    : "dude.vert",
+        "spirvVulkan"   : "dude.vert.spv"
+    },
+
+    "fragmentShader": 
+    {
+        "glslSource": "dude.frag",
+        "spirvVulkan": "dude.frag.spv"
+    },
+
+    "topology" :  "triangleList"
+}

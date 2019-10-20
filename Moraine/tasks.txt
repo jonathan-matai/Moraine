@@ -1,0 +1,17 @@
+PLANNED:
+
+    When selecting queues, prefer queue families with little other flags
+    Investigate issue with Intel UHD Graphics
+
+TODO:
+    
+    Load icon from dll
+
+FINISHED:
+
+    Set some predefined colors
+    Enumerate vulkan device and instacne level extensions
+    Create VkDevice in file mrn_gfxcontext_vk.cpp
+
+    Create window class
+        Check for presentation support when searching for queues

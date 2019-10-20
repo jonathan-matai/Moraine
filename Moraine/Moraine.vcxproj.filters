@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="moraine.h" />
+    <ClInclude Include="mrn_string.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_core.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_time.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_logfile.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_gfxcontext.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_gfxcontext_vk.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_window.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_window_win32.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_application.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_math.h">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_shader.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_shader_vk.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_renderer.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_ext_json.h">
+      <Filter>ext</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_renderer_vk.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="core">
+      <UniqueIdentifier>{9c24249a-af52-4eb4-8545-5d1ad466d40e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics">
+      <UniqueIdentifier>{87030626-f678-44e6-8f4f-b16605e2fbfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{be224051-9254-4a47-af44-de0eb21d6120}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext">
+      <UniqueIdentifier>{488d79c9-6193-4f37-937a-b19975d90dd0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="mrn_string.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_time.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_logfile.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_gfxcontext.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_gfxcontext_vk.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_window.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_window_win32.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_application.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_shader.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_shader_vk.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_ext_json.cpp">
+      <Filter>ext</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_renderer.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_renderer_vk.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="tasks.txt" />
+  </ItemGroup>
+</Project>

@@ -1,6 +1,7 @@
 *.dll
 *.exe
-.bin
+.bin/*
+!.bin/compileShader.ps1
 Moraine/.dump
 Env1/.dump
 .vs

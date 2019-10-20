@@ -1,0 +1,68 @@
+{
+    "fileType": "MORAINE_SHADER",
+
+    "vertexBindings":
+    [
+        {
+            "locations":
+            [
+                {
+                    "type": "float3",
+                    "offset": 0
+                },
+                {
+                    "type": "float",
+                    "offset": 16
+                }
+            ],
+            "inputRate": "vertex"
+        },
+        {
+            "locations":
+            [
+                {
+                    "type": "float4x4",
+                    "offset": 0
+                }
+            ],
+            "inputRate": "instance"
+        }
+    ],
+
+    "descriptorBindings":
+    [
+        [
+            {
+                "type": "combinedImageSampler",
+                "elementCount": 3,
+                "stage": "fragmentShader"
+            },
+            {
+                "type": "uniformBuffer",
+                "stage": "fragmentShader"
+            }
+        ],
+        [
+            {
+                "type": "storageBuffer",
+                "elementCount": 1,
+                "stage": "vertexShader"
+            }
+        ]
+    ],
+
+    "vertexShader":
+    {
+        "glslSource": "dude.vert",
+        "spirvVulkan": "dude.vert.spv"
+    },
+
+    "fragmentShader":
+    {
+        "glslSource": "dude.frag",
+        "spirvVulkan": "dude.frag.spv"
+    },
+
+    "topology": "triangleList"
+
+}

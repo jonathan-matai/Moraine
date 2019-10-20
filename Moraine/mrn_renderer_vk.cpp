@@ -6,7 +6,7 @@ moraine::Renderer_IVulkan::Renderer_IVulkan(GraphicsContext context) :
 {
     createCommandPool();
 
-    t_shader = createShader(L"C:\\dev\\Moraine\\shader\\dude.json", context);
+    t_shader = createShader(L"C:\\dev\\Moraine\\shader\\shader.json", context);
 
     m_commandBuffers.resize(m_context->m_swapchainImages.size());
 

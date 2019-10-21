@@ -41,9 +41,6 @@
     <ClInclude Include="mrn_renderer.h">
       <Filter>graphics</Filter>
     </ClInclude>
-    <ClInclude Include="mrn_ext_json.h">
-      <Filter>ext</Filter>
-    </ClInclude>
     <ClInclude Include="mrn_renderer_vk.h">
       <Filter>graphics</Filter>
     </ClInclude>
@@ -93,14 +90,14 @@
     <ClCompile Include="mrn_shader_vk.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
-    <ClCompile Include="mrn_ext_json.cpp">
-      <Filter>ext</Filter>
-    </ClCompile>
     <ClCompile Include="mrn_renderer.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
     <ClCompile Include="mrn_renderer_vk.cpp">
       <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\.ext\include\json.cpp">
+      <Filter>ext</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

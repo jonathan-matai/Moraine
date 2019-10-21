@@ -1,3 +1,6 @@
+#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
+
 #include "mrn_gfxcontext_vk.h"
 
 #pragma comment(lib, "vulkan-1.lib")
@@ -16,11 +19,19 @@ moraine::GraphicsContext_IVulkan::GraphicsContext_IVulkan(const GraphicsContextD
     createSwapchain();
     createRenderPass();
     createFrameBuffers();
+
+    VmaAllocatorCreateInfo vmaaci = { };
+    vmaaci.device = m_device;
+    vmaaci.physicalDevice = m_physicalDevice.device;
+
+    assert_vulkan(m_logfile, vmaCreateAllocator(&vmaaci, &m_allocator), L"vmaCreateAllocator() failed", MRN_DEBUG_INFO);
 }
 
 
 moraine::GraphicsContext_IVulkan::~GraphicsContext_IVulkan()
 {
+    vmaDestroyAllocator(m_allocator);
+
     for (const auto& a : m_frameBuffers)
         vkDestroyFramebuffer(m_device, a, nullptr);
 
@@ -58,7 +69,7 @@ void moraine::GraphicsContext_IVulkan::createVulkanInstance()
     vai.applicationVersion                  = VK_MAKE_VERSION(1, 0, 0);
     vai.pEngineName                         = "Moraine Graphics Libraray";
     vai.engineVersion                       = VK_MAKE_VERSION(0, 0, 1010);
-    vai.apiVersion                          = VK_VERSION_1_0;
+    vai.apiVersion                          = VK_VERSION_1_1;
 
     std::vector<String> requestedLayers;
 
@@ -175,7 +186,6 @@ void moraine::GraphicsContext_IVulkan::createPhysicalDevice()
 
         for (size_t j = 0; j < deviceSpecs[i].memoryProperties.memoryHeapCount; ++j)
             if(deviceSpecs[i].memoryProperties.memoryHeaps[j].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
-                if(deviceSpecs[i].memoryProperties.memoryHeaps[j].size < 20000000000) /// temporary fix for defect Intel UHD 620 driver
                     score += deviceSpecs[i].memoryProperties.memoryHeaps[j].size / 1000000;
 
         if (score > bestScore)

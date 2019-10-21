@@ -11,6 +11,18 @@
 
 #endif
 
+#ifdef assert
+#undef assert
+#endif
+
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 #include "mrn_math.h"
 #include <memory>
 #include <initializer_list>

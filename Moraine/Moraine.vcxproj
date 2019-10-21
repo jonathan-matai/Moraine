@@ -81,7 +81,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).bin\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(ProjectDir).dump\$(Configuration)-$(Platform)\</IntDir>
-    <IncludePath>C:\VulkanSDK\1.1.121.2\Include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\VulkanSDK\1.1.121.2\Include;$(SolutionDir).ext\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.1.121.2\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -95,7 +95,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir).bin\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(ProjectDir).dump\$(Configuration)-$(Platform)\</IntDir>
-    <IncludePath>C:\VulkanSDK\1.1.121.2\Include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\VulkanSDK\1.1.121.2\Include;$(SolutionDir).ext\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.1.121.2\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -163,7 +163,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="mrn_ext_json.h" />
     <ClInclude Include="moraine.h" />
     <ClInclude Include="mrn_application.h" />
     <ClInclude Include="mrn_core.h" />
@@ -181,8 +180,8 @@
     <ClInclude Include="mrn_window_win32.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\.ext\include\json.cpp" />
     <ClCompile Include="mrn_application.cpp" />
-    <ClCompile Include="mrn_ext_json.cpp" />
     <ClCompile Include="mrn_gfxcontext.cpp" />
     <ClCompile Include="mrn_gfxcontext_vk.cpp" />
     <ClCompile Include="mrn_logfile.cpp" />

@@ -7,6 +7,8 @@
 #include <vector>
 #include <bitset>
 
+#include <vk_mem_alloc.h>
+
 #ifdef _WIN32
 #include "mrn_window_win32.h"
 #include <vulkan/vulkan_win32.h>
@@ -135,6 +137,7 @@ namespace moraine
         VkRenderPass                m_renderPass;
         VkImage                     m_colorImage;
         VkImage                     m_depthImage;
+        VmaAllocator                m_allocator;
 
         Queue m_graphicsQueue;
         Queue m_transferQueue;

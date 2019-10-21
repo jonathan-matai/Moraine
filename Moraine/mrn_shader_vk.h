@@ -6,7 +6,7 @@
 
 #include <vulkan/vulkan.h>
 #include <fstream>
-#include "mrn_ext_json.h"
+#include <json.h>
 
 namespace moraine
 {

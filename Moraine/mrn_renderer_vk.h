@@ -3,6 +3,7 @@
 #include "mrn_renderer.h"
 #include "mrn_gfxcontext_vk.h"
 #include "mrn_shader_vk.h"
+#include "mrn_buffer_vk.h"
 
 namespace moraine
 {
@@ -17,10 +18,7 @@ namespace moraine
 
         std::shared_ptr<GraphicsContext_IVulkan> m_context;
 
-        VkCommandPool m_commandPool;
         std::vector<VkCommandBuffer> m_commandBuffers;
-
-        void createCommandPool();
 
         struct SyncObjects
         {
@@ -43,6 +41,14 @@ namespace moraine
 
         uint32_t m_imageIndex;
 
+        struct T_Vertex
+        {
+            float2 pos;
+            float3 color;
+        };
+
         Shader t_shader;
+        VertexBuffer t_vertexBuffer;
+        IndexBuffer t_indexBuffer;
     };
 }

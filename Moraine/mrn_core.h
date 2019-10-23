@@ -26,6 +26,8 @@
 #include "mrn_math.h"
 #include <memory>
 #include <initializer_list>
+#include <functional>
+#include <algorithm>
 
 #include <list>
 

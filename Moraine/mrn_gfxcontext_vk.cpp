@@ -1,5 +1,5 @@
 #define VMA_IMPLEMENTATION
-#include "vk_mem_alloc.h"
+#include <vk_mem_alloc.h>
 
 #include "mrn_gfxcontext_vk.h"
 
@@ -41,6 +41,11 @@ moraine::GraphicsContext_IVulkan::~GraphicsContext_IVulkan()
         vkDestroyImageView(m_device, a, nullptr);
 
     vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+
+    for (const auto& a : m_mainThreadCommandPools)
+        if(a != VK_NULL_HANDLE)
+            vkDestroyCommandPool(m_device, a, nullptr);
+
     vkDestroyDevice(m_device, nullptr);
 
     vkDestroySurfaceKHR(m_instance, m_windowSurface, nullptr);
@@ -568,6 +573,7 @@ void moraine::GraphicsContext_IVulkan::createLogicalDevice()
 
     VkPhysicalDeviceFeatures features = { };
     features.wideLines = VK_TRUE;
+    features.fillModeNonSolid = VK_TRUE;
 
     std::vector<String> requestedLayers;
 
@@ -600,6 +606,19 @@ void moraine::GraphicsContext_IVulkan::createLogicalDevice()
     vdci.pEnabledFeatures                       = &features;
 
     assert_vulkan(m_logfile, vkCreateDevice(m_physicalDevice.device, &vdci, nullptr, &m_device), L"vkCreateDevice() failed", MRN_DEBUG_INFO);
+
+    m_mainThreadCommandPools.resize(m_physicalDevice.queueFamilyProperties.size(), VK_NULL_HANDLE);
+
+    for (const auto& a : enabledQueues)
+    {
+        VkCommandPoolCreateInfo vcpci;
+        vcpci.sType                             = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        vcpci.pNext                             = nullptr;
+        vcpci.flags                             = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        vcpci.queueFamilyIndex                  = a.queueFamilyIndex;
+
+        assert_vulkan(m_logfile, vkCreateCommandPool(m_device, &vcpci, nullptr, &m_mainThreadCommandPools[a.queueFamilyIndex]), L"vkCreateCommandPool() failed", MRN_DEBUG_INFO);
+    }
 
     activateQueue(m_graphicsQueue);
     if(transferAvailable)
@@ -764,6 +783,59 @@ void moraine::GraphicsContext_IVulkan::createFrameBuffers()
 }
 
 
+void moraine::GraphicsContext_IVulkan::dispatchTask(Queue queue, std::function<void(VkCommandBuffer)> task)
+{
+    VkCommandBufferAllocateInfo allocateInfo;
+    allocateInfo.sType                          = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocateInfo.pNext                          = nullptr;
+    allocateInfo.commandPool                    = m_mainThreadCommandPools[queue.queueFamilyIndex];
+    allocateInfo.level                          = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocateInfo.commandBufferCount             = 1;
+
+    VkCommandBuffer buffer;
+    assert_vulkan(m_logfile, vkAllocateCommandBuffers(m_device, &allocateInfo, &buffer), L"vkAllocateCommandBuffers() failed", MRN_DEBUG_INFO);
+
+    VkCommandBufferBeginInfo beginInfo;
+    beginInfo.sType                             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.pNext                             = nullptr;
+    beginInfo.flags                             = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    beginInfo.pInheritanceInfo                  = nullptr;
+
+    assert_vulkan(m_logfile, vkBeginCommandBuffer(buffer, &beginInfo), L"vkBeginCommandBuffer() failed", MRN_DEBUG_INFO);
+
+    task(buffer);
+
+    assert_vulkan(m_logfile, vkEndCommandBuffer(buffer), L"vkEndCommandBuffer() failed", MRN_DEBUG_INFO);
+
+    VkFence fence;
+
+    VkFenceCreateInfo fenceInfo;
+    fenceInfo.sType                             = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.pNext                             = nullptr;
+    fenceInfo.flags                             = 0;
+
+    assert_vulkan(m_logfile, vkCreateFence(m_device, &fenceInfo, nullptr, &fence), L"vkCreateFence() failed", MRN_DEBUG_INFO);
+
+    VkSubmitInfo submitInfo;
+    submitInfo.sType                            = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pNext                            = nullptr;
+    submitInfo.waitSemaphoreCount               = 0;
+    submitInfo.pWaitSemaphores                  = nullptr;
+    submitInfo.pWaitDstStageMask                = nullptr;
+    submitInfo.commandBufferCount               = 1;
+    submitInfo.pCommandBuffers                  = &buffer;
+    submitInfo.signalSemaphoreCount             = 0;
+    submitInfo.pSignalSemaphores                = nullptr;
+
+    assert_vulkan(m_logfile, vkQueueSubmit(queue.queue, 1, &submitInfo, fence), L"vkQueueSubmit()", MRN_DEBUG_INFO);
+
+    assert_vulkan(m_logfile, vkWaitForFences(m_device, 1, &fence, VK_TRUE, UINT64_MAX), L"vkWaitForFences()", MRN_DEBUG_INFO);
+
+    vkDestroyFence(m_device, fence, nullptr);
+    vkFreeCommandBuffers(m_device, m_mainThreadCommandPools[queue.queueFamilyIndex], 1, &buffer);
+}
+
+
 std::vector<const char*> moraine::GraphicsContext_IVulkan::listAndEnableInstanceLayers(std::vector<String>& requestedLayers)
 {
     uint32_t n_layers;
@@ -790,7 +862,10 @@ std::vector<const char*> moraine::GraphicsContext_IVulkan::listAndEnableInstance
                 break;
             }
 
-        t->addRow(requested ? GREEN : GREY, { moraine::sprintf(L"%d", i), p_layers[i].layerName, p_layers[i].description });
+        if(requested)
+            t->addRow(GREEN, { moraine::sprintf(L"%d", i), p_layers[i].layerName, p_layers[i].description });
+        else if(m_description.enableValidation)
+            t->addRow(GREY, { moraine::sprintf(L"%d", i), p_layers[i].layerName, p_layers[i].description });
     }
 
     for(size_t i = 0; i < requestedLayers.size(); ++i)
@@ -828,7 +903,10 @@ std::vector<const char*> moraine::GraphicsContext_IVulkan::listAndEnableInstance
                 break;
             }
 
-        t->addRow(requested ? GREEN : GREY, { moraine::sprintf(L"%d", i), p_extensions[i].extensionName });
+        if (requested)
+            t->addRow(GREEN, { moraine::sprintf(L"%d", i), p_extensions[i].extensionName });
+        else if (m_description.enableValidation)
+            t->addRow(GREY, { moraine::sprintf(L"%d", i), p_extensions[i].extensionName });
     }
 
     for (size_t i = 0; i < requestedExtensions.size(); ++i)
@@ -851,7 +929,7 @@ std::vector<const char*> moraine::GraphicsContext_IVulkan::listAndEnableDeviceLa
     std::vector<const char*> enabledLayers = { }; // Layers that are both requested and available
     std::vector<bool> availableLayers(requestedLayers.size(), false); // marks which of the requested layers are available
 
-    Table t = createTable(L"Vulkan Instance Layers", WHITE, { L"ID", L"Name", L"Description" });
+    Table t = createTable(L"Vulkan Device Layers", WHITE, { L"ID", L"Name", L"Description" });
 
     for (size_t i = 0; i < p_layers.size(); ++i)
     {
@@ -866,7 +944,10 @@ std::vector<const char*> moraine::GraphicsContext_IVulkan::listAndEnableDeviceLa
                 break;
             }
 
-        t->addRow(requested ? GREEN : GREY, { moraine::sprintf(L"%d", i), p_layers[i].layerName, p_layers[i].description });
+        if (requested)
+            t->addRow(GREEN, { moraine::sprintf(L"%d", i), p_layers[i].layerName, p_layers[i].description });
+        else if (m_description.enableValidation)
+            t->addRow(GREY, { moraine::sprintf(L"%d", i), p_layers[i].layerName, p_layers[i].description });
     }
 
     for (size_t i = 0; i < requestedLayers.size(); ++i)
@@ -904,7 +985,10 @@ std::vector<const char*> moraine::GraphicsContext_IVulkan::listAndEnableDeviceEx
                 break;
             }
 
-        t->addRow(requested ? GREEN : GREY, { moraine::sprintf(L"%d", i), p_extensions[i].extensionName });
+        if (requested)
+            t->addRow(GREEN, { moraine::sprintf(L"%d", i), p_extensions[i].extensionName });
+        else if (m_description.enableValidation)
+            t->addRow(GREY, { moraine::sprintf(L"%d", i), p_extensions[i].extensionName });
     }
 
     for (size_t i = 0; i < requestedExtensions.size(); ++i)

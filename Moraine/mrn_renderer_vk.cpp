@@ -4,16 +4,29 @@ moraine::Renderer_IVulkan::Renderer_IVulkan(GraphicsContext context) :
     m_context(std::static_pointer_cast<GraphicsContext_IVulkan>(context)),
     m_syncObjectIndex(0)
 {
-    createCommandPool();
-
     t_shader = createShader(L"C:\\dev\\Moraine\\shader\\shader.json", context);
+
+    std::vector<T_Vertex> t_verticies =
+    {
+        { float2(-.5f, -.5f), float3(1.0f, 0.0f, 0.0f) },
+        { float2(0.5f, -.5f), float3(0.0f, 1.0f, 0.0f) },
+        { float2(0.0f, 0.0f), float3(0.0f, 0.0f, 1.0f) },
+        { float2(-.5f, 0.5f), float3(1.0f, 0.0f, 1.0f) },
+        { float2(0.5f, 0.5f), float3(1.0f, 1.0f, 0.0f) },
+    };
+
+    std::vector<uint16_t> t_indicies =
+    { 0, 1, 2, 3, 2, 4 };
+
+    t_vertexBuffer = createVertexBuffer(context, sizeof(T_Vertex) * t_verticies.size(), t_verticies.data());
+    t_indexBuffer = createIndexBuffer(context, t_indicies.size(), t_indicies.data());
 
     m_commandBuffers.resize(m_context->m_swapchainImages.size());
 
     VkCommandBufferAllocateInfo vcbai;
     vcbai.sType                     = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     vcbai.pNext                     = nullptr;
-    vcbai.commandPool               = m_commandPool;
+    vcbai.commandPool               = m_context->m_mainThreadCommandPools[m_context->m_graphicsQueue.queueFamilyIndex];
     vcbai.level                     = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     vcbai.commandBufferCount        = static_cast<uint32_t>(m_context->m_swapchainImages.size());
 
@@ -62,7 +75,13 @@ moraine::Renderer_IVulkan::Renderer_IVulkan(GraphicsContext context) :
 
         vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, std::static_pointer_cast<Shader_IVulkan>(t_shader)->m_pipeline);
 
-        vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
+        size_t offset = 0;
+        VkBuffer buffer = std::static_pointer_cast<VertexBuffer_IVulkan>(t_vertexBuffer)->getBuffer();
+        vkCmdBindVertexBuffers(m_commandBuffers[i], 0, 1, &buffer, &offset);
+
+        std::static_pointer_cast<IndexBuffer_IVulkan>(t_indexBuffer)->bind(m_commandBuffers[i]);
+
+        vkCmdDrawIndexed(m_commandBuffers[i], 6, 1, 0, 0, 0);
 
         vkCmdEndRenderPass(m_commandBuffers[i]);
 
@@ -76,9 +95,7 @@ moraine::Renderer_IVulkan::~Renderer_IVulkan()
 {
     vkDeviceWaitIdle(m_context->m_device);
 
-    vkFreeCommandBuffers(m_context->m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
-
-    vkDestroyCommandPool(m_context->m_device, m_commandPool, nullptr);
+    vkFreeCommandBuffers(m_context->m_device, m_context->m_mainThreadCommandPools[m_context->m_graphicsQueue.queueFamilyIndex], static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
 }
 
 void moraine::Renderer_IVulkan::tick(float delta)
@@ -122,17 +139,6 @@ void moraine::Renderer_IVulkan::tick(float delta)
     assert_vulkan(m_context->m_logfile, vkQueuePresentKHR(m_context->m_graphicsQueue.queue, &vpi), L"vkQueuePresentKHR() failed", MRN_DEBUG_INFO);
 
     m_syncObjectIndex = (m_syncObjectIndex + 1) % m_syncObjects.size();
-}
-
-void moraine::Renderer_IVulkan::createCommandPool()
-{
-    VkCommandPoolCreateInfo vcpci;
-    vcpci.sType                     = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    vcpci.pNext                     = nullptr;
-    vcpci.flags                     = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    vcpci.queueFamilyIndex          = m_context->m_graphicsQueue.queueFamilyIndex;
-
-    assert_vulkan(m_context->m_logfile, vkCreateCommandPool(m_context->m_device, &vcpci, nullptr, &m_commandPool), L"vkCreateCommandPool() failed", MRN_DEBUG_INFO);
 }
 
 moraine::Renderer_IVulkan::SyncObjects::SyncObjects(VkDevice device, Logfile logfile) :

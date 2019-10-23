@@ -165,6 +165,8 @@
   <ItemGroup>
     <ClInclude Include="moraine.h" />
     <ClInclude Include="mrn_application.h" />
+    <ClInclude Include="mrn_constset.h" />
+    <ClInclude Include="mrn_constset_vk.h" />
     <ClInclude Include="mrn_core.h" />
     <ClInclude Include="mrn_gfxcontext.h" />
     <ClInclude Include="mrn_gfxcontext_vk.h" />
@@ -176,12 +178,17 @@
     <ClInclude Include="mrn_shader_vk.h" />
     <ClInclude Include="mrn_string.h" />
     <ClInclude Include="mrn_time.h" />
+    <ClInclude Include="mrn_vector.h" />
+    <ClInclude Include="mrn_buffer.h" />
+    <ClInclude Include="mrn_buffer_vk.h" />
     <ClInclude Include="mrn_window.h" />
     <ClInclude Include="mrn_window_win32.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\.ext\include\json.cpp" />
     <ClCompile Include="mrn_application.cpp" />
+    <ClCompile Include="mrn_constset.cpp" />
+    <ClCompile Include="mrn_constset_vk.cpp" />
     <ClCompile Include="mrn_gfxcontext.cpp" />
     <ClCompile Include="mrn_gfxcontext_vk.cpp" />
     <ClCompile Include="mrn_logfile.cpp" />
@@ -191,6 +198,8 @@
     <ClCompile Include="mrn_shader_vk.cpp" />
     <ClCompile Include="mrn_string.cpp" />
     <ClCompile Include="mrn_time.cpp" />
+    <ClCompile Include="mrn_buffer.cpp" />
+    <ClCompile Include="mrn_buffer_vk.cpp" />
     <ClCompile Include="mrn_window.cpp" />
     <ClCompile Include="mrn_window_win32.cpp" />
   </ItemGroup>

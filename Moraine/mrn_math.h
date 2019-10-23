@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "mrn_vector.h"
+
 namespace moraine
 {
     template<typename T>

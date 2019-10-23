@@ -77,6 +77,8 @@ namespace moraine
                                          VkDebugUtilsMessageTypeFlagsEXT messageType,
                                          const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData);
 
+        
+
         void createVulkanInstance();
         void setupValidation();
         void createPhysicalDevice();
@@ -106,6 +108,8 @@ namespace moraine
 
             uint32_t queueFamilyIndex;
         };
+
+        void dispatchTask(Queue queue, std::function<void(VkCommandBuffer)> task);
 
         std::vector<const char*> listAndEnableInstanceLayers(std::vector<String>& requestedLayers);
         std::vector<const char*> listAndEnableInstanceExtensions(std::vector<String>& requestedExtensions);
@@ -138,6 +142,7 @@ namespace moraine
         VkImage                     m_colorImage;
         VkImage                     m_depthImage;
         VmaAllocator                m_allocator;
+        std::vector<VkCommandPool>  m_mainThreadCommandPools;
 
         Queue m_graphicsQueue;
         Queue m_transferQueue;

@@ -7,25 +7,16 @@
             "locations":
             [
                 {
-                    "type": "float3",
+                    "type": "float2",
                     "offset": 0
                 },
                 {
-                    "type": "float",
+                    "type": "float3",
                     "offset": 16
                 }
             ],
-            "inputRate": "vertex"
-        },
-        {
-            "locations":
-            [
-                {
-                    "type": "float4x4",
-                    "offset": 0
-                }
-            ],
-            "inputRate": "instance"
+            "inputRate": "vertex",
+            "stride": 32
         }
     ],
 
@@ -38,7 +29,7 @@
                 "stage": "fragmentShader"
             },
             {
-                "type": "uniformBuffer",
+                "type": "constantBuffer",
                 "stage": "fragmentShader"
             }
         ],
@@ -63,6 +54,12 @@
         "spirvVulkan": "dude.frag.spv"
     },
 
-    "topology": "triangleList"
+    "topology": "triangleList",
+
+    "polygonMode": "line",
+
+    "lineWidth": 20.0,
+
+    "backfaceCulling": true
 
 }

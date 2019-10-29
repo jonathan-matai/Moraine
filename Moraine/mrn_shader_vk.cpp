@@ -272,6 +272,11 @@ moraine::Shader_IVulkan::~Shader_IVulkan()
     vkDestroyPipelineLayout(m_context->m_device, m_layout, nullptr);
 }
 
+void moraine::Shader_IVulkan::bind(VkCommandBuffer buffer)
+{
+    vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+}
+
 void moraine::Shader_IVulkan::compileShaderStage(std::string path, std::vector<VkPipelineShaderStageCreateInfo>& outStage, std::vector<VkShaderModule>& outModule, VkShaderStageFlagBits stage)
 {
     std::ifstream binary(path.c_str(), std::ios::ate | std::ios::binary);
@@ -405,6 +410,7 @@ void moraine::Shader_IVulkan::createPipelineLayout(Json::Value& jsonfile, String
         const Json::Value& descriptorSets = jsonfile["descriptorBindings"];
 
         m_descriptorLayouts.resize(descriptorSets.size());
+        m_desriptorPoolSizes.resize(m_descriptorLayouts.size());
 
         for (size_t i = 0; i < descriptorSets.size(); ++i)
         {
@@ -475,6 +481,13 @@ void moraine::Shader_IVulkan::createPipelineLayout(Json::Value& jsonfile, String
                     }
 
                     bindings.push_back(binding);
+
+                    auto poolSize = std::find_if(m_desriptorPoolSizes[i].begin(), m_desriptorPoolSizes[i].end(), [binding](const VkDescriptorPoolSize& poolSize) { return poolSize.type == binding.descriptorType; });
+
+                    if (poolSize == m_desriptorPoolSizes[i].end())
+                        m_desriptorPoolSizes[i].push_back({ binding.descriptorType, static_cast<uint32_t>(m_context->m_swapchainImages.size()) });
+                    else
+                        poolSize->descriptorCount += static_cast<uint32_t>(m_context->m_swapchainImages.size());
                 }
             }
             else

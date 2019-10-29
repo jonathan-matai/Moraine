@@ -77,7 +77,7 @@ namespace moraine
                                          VkDebugUtilsMessageTypeFlagsEXT messageType,
                                          const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData);
 
-        
+        void addAsyncTask(std::function<void(uint32_t)> perFrameTasks, std::function<void()> finalizationTask);
 
         void createVulkanInstance();
         void setupValidation();
@@ -107,6 +107,13 @@ namespace moraine
             };
 
             uint32_t queueFamilyIndex;
+        };
+
+        struct AsyncTask
+        {
+            std::function<void(uint32_t)> perFrameTasks;
+            uint32_t completedFramesBitset;
+            std::function<void()> finalizationTask;
         };
 
         void dispatchTask(Queue queue, std::function<void(VkCommandBuffer)> task);
@@ -143,6 +150,7 @@ namespace moraine
         VkImage                     m_depthImage;
         VmaAllocator                m_allocator;
         std::vector<VkCommandPool>  m_mainThreadCommandPools;
+        std::list<AsyncTask>        m_asyncTasks;
 
         Queue m_graphicsQueue;
         Queue m_transferQueue;

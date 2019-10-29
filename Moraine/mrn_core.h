@@ -28,7 +28,7 @@
 #include <initializer_list>
 #include <functional>
 #include <algorithm>
-
+#include <array>
 #include <list>
 
 namespace moraine

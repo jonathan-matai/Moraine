@@ -24,7 +24,18 @@
     [
         [
             {
-                "type": "constantArray",
+                "type": "combinedImageSampler",
+                "elementCount": 3,
+                "stage": "fragmentShader"
+            },
+            {
+                "type": "constantBuffer",
+                "stage": "fragmentShader"
+            }
+        ],
+        [
+            {
+                "type": "storageBuffer",
                 "elementCount": 1,
                 "stage": "vertexShader"
             }

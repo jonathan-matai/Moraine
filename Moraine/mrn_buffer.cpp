@@ -15,3 +15,13 @@ moraine::IndexBuffer moraine::createIndexBuffer(GraphicsContext context, size_t 
 {
     return std::make_shared<IndexBuffer_IVulkan>(context, indexCount, indexData);
 }
+
+moraine::ConstantBuffer moraine::createConstantBuffer(GraphicsContext context, size_t size, bool updateEveryFrame)
+{
+    return std::make_shared<ConstantBuffer_IVulkan>(context, size, updateEveryFrame);
+}
+
+moraine::ConstantArray moraine::createConstantArray(GraphicsContext context, size_t elementSize, size_t initialElementCount, bool updateEveryFrame)
+{
+    return std::make_shared<ConstantArray_IVulkan>(context, elementSize, initialElementCount, updateEveryFrame);
+}

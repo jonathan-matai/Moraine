@@ -22,7 +22,7 @@ moraine::Window_IWin32::Window_IWin32(const WindowDesc& description, Logfile log
     windowClass.hInstance       = m_instance;
     windowClass.hIcon           = LoadIconW(m_instance, IDI_APPLICATION);
     windowClass.hCursor         = LoadCursorW(NULL, IDC_ARROW);
-    windowClass.hbrBackground   = CreateSolidBrush(RGB(0xff, 0x00, 0x80));
+    windowClass.hbrBackground   = CreateSolidBrush(RGB(0, 0, 51));
     windowClass.lpszMenuName    = 0;
     windowClass.lpszClassName   = description.title.wcstr();
     windowClass.hIconSm         = 0;

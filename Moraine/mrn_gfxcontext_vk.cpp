@@ -1119,3 +1119,8 @@ VkBool32 __stdcall moraine::GraphicsContext_IVulkan::debugCallback(VkDebugUtilsM
 
     return VK_FALSE;
 }
+
+void moraine::GraphicsContext_IVulkan::addAsyncTask(std::function<void(uint32_t)> perFrameTasks, std::function<void()> finalizationTask)
+{
+    m_asyncTasks.push_back({ perFrameTasks, (1u << m_swapchainImages.size()) - 1, finalizationTask });
+}

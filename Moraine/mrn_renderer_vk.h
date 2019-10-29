@@ -4,6 +4,7 @@
 #include "mrn_gfxcontext_vk.h"
 #include "mrn_shader_vk.h"
 #include "mrn_buffer_vk.h"
+#include "mrn_constset_vk.h"
 
 namespace moraine
 {
@@ -36,6 +37,8 @@ namespace moraine
             VkFence m_fence;
         };
 
+        void recordCommandBuffer(uint32_t frameIndex);
+
         std::vector<SyncObjects> m_syncObjects;
         uint32_t m_syncObjectIndex;
 
@@ -50,5 +53,8 @@ namespace moraine
         Shader t_shader;
         VertexBuffer t_vertexBuffer;
         IndexBuffer t_indexBuffer;
+        ConstantBuffer t_constantBuffer;
+        ConstantSet t_constantSet;
+        ConstantArray t_constantArray;
     };
 }

@@ -49,6 +49,18 @@ void moraine::ConstantSet_IVulkan::bind(VkCommandBuffer buffer, uint32_t frameIn
     vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shader->m_layout, m_setIndex, 1, &m_descriptorSets[frameIndex], static_cast<uint32_t>(offsets.size()), offsets.data());
 }
 
+void moraine::ConstantSet_IVulkan::bind(VkCommandBuffer buffer, uint32_t frameIndex, const std::vector<uint32_t>& arrayIndicies)
+{
+    assert(m_shader->m_context->m_logfile, arrayIndicies.size() == m_arrayAlignedElementSizes.size(), L"Wrong API Usage: Not all arrayIndicies provided!", MRN_DEBUG_INFO);
+
+    std::vector<uint32_t> offsets(arrayIndicies.size());
+
+    for (size_t i = 0; i < arrayIndicies.size(); ++i)
+        offsets[i] = static_cast<uint32_t>(m_arrayAlignedElementSizes[i].first * arrayIndicies.begin()[i]);
+
+    vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shader->m_layout, m_setIndex, 1, &m_descriptorSets[frameIndex], static_cast<uint32_t>(offsets.size()), offsets.data());
+}
+
 void moraine::ConstantSet_IVulkan::updateDescriptorSets(std::initializer_list<std::pair<ConstantResource, uint32_t>> resources)
 {
     std::vector<VkWriteDescriptorSet> writeSets;
@@ -97,6 +109,14 @@ void moraine::ConstantSet_IVulkan::updateDescriptorSets(std::initializer_list<st
                 break;
             }
 
+            case CONSTANT_RESOURCE_TYPE_COMBINED_IMAGE_SAMPLER:
+            {
+                auto c = std::static_pointer_cast<Texture_IVulkan>(b.first);
+                imageInfos.push_back({ c->m_sampler, c->m_imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL });
+                writeSet.pImageInfo = reinterpret_cast<VkDescriptorImageInfo*>(imageInfos.size()); // write (vector index + 1) instead of pointer
+                break;
+            }
+
             default:
             {
                 m_shader->m_context->m_logfile->print(RED, L"API ERROR: Unknown resource type!", MRN_DEBUG_INFO);
@@ -111,6 +131,8 @@ void moraine::ConstantSet_IVulkan::updateDescriptorSets(std::initializer_list<st
     for (auto& a : writeSets)
         if (a.pBufferInfo != nullptr)
             a.pBufferInfo = &bufferInfos[reinterpret_cast<size_t>(a.pBufferInfo) - 1];
+        else if (a.pImageInfo != nullptr)
+            a.pImageInfo = &imageInfos[reinterpret_cast<size_t>(a.pImageInfo) - 1];
 
     vkUpdateDescriptorSets(m_shader->m_context->m_device, static_cast<uint32_t>(writeSets.size()), writeSets.data(), 0, nullptr);
 }
@@ -169,6 +191,22 @@ void moraine::ConstantSet_IVulkan::updateDescriptorSet(std::pair<ConstantResourc
             }
 
         break;
+    }
+
+    case CONSTANT_RESOURCE_TYPE_COMBINED_IMAGE_SAMPLER:
+    {
+        auto c = static_cast<Texture_IVulkan*>(resource.first);
+
+        VkDescriptorImageInfo imageInfo;
+        imageInfo.sampler           = c->m_sampler;
+        imageInfo.imageView         = c->m_imageView;
+        imageInfo.imageLayout       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        writeSet.pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(m_shader->m_context->m_device, 1, &writeSet, 0, nullptr);
+        break;
+
     }
 
     default:

@@ -3,6 +3,7 @@
 #include "mrn_constset.h"
 #include "mrn_shader_vk.h"
 #include "mrn_buffer_vk.h"
+#include "mrn_texture_vk.h"
 
 #ifdef assert
 #undef assert
@@ -18,6 +19,7 @@ namespace moraine
         ~ConstantSet_IVulkan() override;
 
         void bind(VkCommandBuffer buffer, uint32_t frameIndex, std::initializer_list<uint32_t> arrayIndicies);
+        void bind(VkCommandBuffer buffer, uint32_t frameIndex, const std::vector<uint32_t>& arrayIndicies);
 
 
         void updateDescriptorSets(std::initializer_list<std::pair<ConstantResource, uint32_t>> resources);

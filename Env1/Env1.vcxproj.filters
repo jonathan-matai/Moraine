@@ -3,4 +3,7 @@
   <ItemGroup>
     <ClCompile Include="env1.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Spiral.h" />
+  </ItemGroup>
 </Project>

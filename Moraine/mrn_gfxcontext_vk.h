@@ -152,6 +152,8 @@ namespace moraine
         std::vector<VkCommandPool>  m_mainThreadCommandPools;
         std::list<AsyncTask>        m_asyncTasks;
 
+        bool mt_updateCommandBuffers;
+
         Queue m_graphicsQueue;
         Queue m_transferQueue;
     };

@@ -59,6 +59,21 @@
     <ClInclude Include="mrn_constset_vk.h">
       <Filter>graphics</Filter>
     </ClInclude>
+    <ClInclude Include="mrn_texture.h">
+      <Filter>memory</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_texture_vk.h">
+      <Filter>memory</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_layer.h">
+      <Filter>layer</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_object.h">
+      <Filter>layer</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_object_graphics.h">
+      <Filter>layer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="core">
@@ -75,6 +90,9 @@
     </Filter>
     <Filter Include="memory">
       <UniqueIdentifier>{e6992d06-274a-4dd9-8c67-42848fe4f508}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="layer">
+      <UniqueIdentifier>{4e8fc1aa-704b-4f71-94fb-25f5592ff03b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +146,15 @@
     </ClCompile>
     <ClCompile Include="mrn_constset_vk.cpp">
       <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_texture.cpp">
+      <Filter>memory</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_texture_vk.cpp">
+      <Filter>memory</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_layer.cpp">
+      <Filter>layer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

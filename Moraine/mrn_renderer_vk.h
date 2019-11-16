@@ -5,6 +5,8 @@
 #include "mrn_shader_vk.h"
 #include "mrn_buffer_vk.h"
 #include "mrn_constset_vk.h"
+#include "mrn_texture_vk.h"
+#include "mrn_object_graphics.h"
 
 namespace moraine
 {
@@ -12,10 +14,10 @@ namespace moraine
     {
     public:
 
-        Renderer_IVulkan(GraphicsContext context);
+        Renderer_IVulkan(GraphicsContext context, std::list<Layer>* layerStack);
         ~Renderer_IVulkan() override;
 
-        void tick(float delta) override;
+        uint32_t tick(float delta) override;
 
         std::shared_ptr<GraphicsContext_IVulkan> m_context;
 
@@ -50,11 +52,20 @@ namespace moraine
             float3 color;
         };
 
+        struct T_ImageVertex
+        {
+            float2 xy;
+            float2 uv;
+        };
+
         Shader t_shader;
         VertexBuffer t_vertexBuffer;
         IndexBuffer t_indexBuffer;
         ConstantBuffer t_constantBuffer;
         ConstantSet t_constantSet;
         ConstantArray t_constantArray;
+        Texture t_texture;
+
+        std::list<Layer>* m_layerStack;
     };
 }

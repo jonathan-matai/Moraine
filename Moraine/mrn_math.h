@@ -23,4 +23,18 @@ namespace moraine
     {
         return value < min ? min : (value > max ? max : value);
     }
+
+    constexpr double PI = 3.141592653589793116;
+
+    template<typename T>
+    inline T degToRad(T degrees)
+    {
+        return static_cast<T>(degrees / 180.0 * PI);
+    }
+
+    template<typename T>
+    inline T radToDeg(T radians)
+    {
+        return static_cast<T>(radians / PI * 180);
+    }
 }

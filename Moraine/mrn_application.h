@@ -5,6 +5,9 @@
 #include "mrn_window.h"
 #include "mrn_gfxcontext.h"
 #include "mrn_shader.h"
+#include "mrn_texture.h"
+#include "mrn_buffer.h"
+#include "mrn_layer.h"
 
 namespace moraine
 {
@@ -25,6 +28,16 @@ namespace moraine
         virtual void run() = 0;
 
         virtual Shader createShader(Stringr shader) = 0;
+        virtual Texture createTexture(Stringr texture) = 0;
+        virtual VertexBuffer createVertexBuffer(size_t size, void* data) = 0;
+        virtual IndexBuffer createIndexBuffer(size_t indexCount, uint16_t* indexData) = 0;
+        virtual IndexBuffer createIndexBuffer(size_t indexCount, uint32_t* indexData) = 0;
+        virtual ConstantBuffer createConstantBuffer(size_t size, bool updateEveryFrame) = 0;
+        virtual ConstantArray createConstantArray(size_t elementSize, size_t initialElementCount, bool updateEveryFrame) = 0;
+
+        virtual void addLayer(Layer layer) = 0;
+
+        virtual void t_updateCommandBuffers() = 0;
     };
 
     typedef std::shared_ptr<Application_T> Application;

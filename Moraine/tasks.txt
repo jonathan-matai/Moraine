@@ -15,3 +15,19 @@ FINISHED:
 
     Create window class
         Check for presentation support when searching for queues
+
+
+=== Layer System ==
+
+class Object
+    virtual bRemove tick(float delta)
+
+class Layer
+    virtual void tick(float delta)
+    virtual void add(unique_ptr<Object> object)
+
+class RenderableObject_T : Object
+    
+
+class RenderableObject_IVulkan : RenderableObject_T
+    

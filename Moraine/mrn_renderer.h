@@ -3,6 +3,7 @@
 #include "mrn_core.h"
 
 #include "mrn_gfxcontext.h"
+#include "mrn_layer.h"
 
 namespace moraine
 {
@@ -12,10 +13,10 @@ namespace moraine
 
         virtual ~Renderer_T() = default;
 
-        virtual void tick(float delta) = 0;
+        virtual uint32_t tick(float delta) = 0; // return frame index for next frame
     };
 
     typedef std::shared_ptr<Renderer_T> Renderer;
 
-    MRN_API Renderer createRenderer(GraphicsContext context);
+    MRN_API Renderer createRenderer(GraphicsContext context, std::list<Layer>* layerStack);
 }

@@ -1,4 +1,5 @@
 #include <moraine.h>
+#include "Spiral.h"
 
 int main()
 {
@@ -17,9 +18,58 @@ int main()
 
     mrn::Application app = mrn::createApplication(desc);
 
-    //mrn::Shader shader = app->createShader(L"C:\\dev\\Moraine\\shader\\dude.json");
+    mrn::Shader shader = app->createShader(L"C:\\dev\\Moraine\\Env1\\spiral\\spiral.json");
+
+    mrn::Texture texture = app->createTexture(L"C:\\dev\\Moraine\\Env1\\spiral.png");
+
+    struct Vertex
+    {
+        mrn::float2 pos;
+        mrn::float2 tex;
+    };
+
+    std::array<Vertex, 6> verticies { {
+        { { -0.3f, -0.3f }, { 0.0f, 0.0f } },
+        { {  0.3f, -0.3f }, { 1.0f, 0.0f } },
+        { {  0.3f,  0.3f }, { 1.0f, 1.0f } },
+        { {  0.3f,  0.3f }, { 1.0f, 1.0f } },
+        { { -0.3f,  0.3f }, { 0.0f, 1.0f } },
+        { { -0.3f, -0.3f }, { 0.0f, 0.0f } }
+    } };
+
+    mrn::VertexBuffer vertexBuffer = app->createVertexBuffer(verticies.size() * sizeof(Vertex), verticies.data());
+
+    std::array<uint16_t, 6> indicies { 0, 1, 2, 2, 3, 0 };
+
+    mrn::IndexBuffer indexBuffer = app->createIndexBuffer(indicies.size(), indicies.data());
+
+    mrn::ConstantArray constantArray = app->createConstantArray(sizeof(Spiral::ConstantBufferData), 10, true);
+
+    mrn::ConstantSet constantSet = mrn::createConstantSet(shader, 0, { { texture, 0 }, { constantArray, 1 } });
+
+    Spiral::s_graphicsParameters = std::make_shared<mrn::GraphicsParameters>(shader, 
+                                                                             nullptr,//indexBuffer, 
+                                                                             std::initializer_list<mrn::VertexBuffer>{ vertexBuffer }, 
+                                                                             std::initializer_list<mrn::ConstantSet>{ constantSet }, 
+                                                                             std::initializer_list<mrn::ConstantArray>{ constantArray },
+                                                                             std::initializer_list<mrn::ObjectType>{ UINT32_MAX },
+                                                                             6,
+                                                                             1);
+
+    mrn::Layer layer = mrn::createLayer(L"Spiral Layer");
+
+    layer->add(std::make_unique<Spiral>(mrn::float2(-0.5f, -0.5f), mrn::RED));
+    layer->add(std::make_unique<Spiral>(mrn::float2(+0.5f, -0.5f), mrn::BLUE));
+    layer->add(std::make_unique<Spiral>(mrn::float2(+0.5f, +0.5f), mrn::GREEN));
+    layer->add(std::make_unique<Spiral>(mrn::float2(-0.5f, +0.5f), mrn::ORANGE));
+
+    app->addLayer(layer);
+
+    app->t_updateCommandBuffers();
 
     app->run();
 
     return 0;
 }
+
+std::shared_ptr<mrn::GraphicsParameters> Spiral::s_graphicsParameters = { };

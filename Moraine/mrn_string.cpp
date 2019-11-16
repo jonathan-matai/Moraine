@@ -7,8 +7,8 @@
 
 namespace moraine
 {
-    thread_local char    s_mbbuf[1024];
-    thread_local wchar_t s_wcbuf[1024];
+    thread_local char    s_mbbuf[4096];
+    thread_local wchar_t s_wcbuf[4096];
 }
 
 moraine::String::String()

@@ -82,7 +82,10 @@ void moraine::GraphicsContext_IVulkan::createVulkanInstance()
     {
         requestedLayers.push_back("VK_LAYER_KHRONOS_validation");
         requestedLayers.push_back("VK_LAYER_LUNARG_monitor");
+        
     }
+
+    //requestedLayers.push_back("VK_LAYER_LUNARG_api_dump");
 
     auto enabledLayers = listAndEnableInstanceLayers(requestedLayers);
     
@@ -574,6 +577,7 @@ void moraine::GraphicsContext_IVulkan::createLogicalDevice()
     VkPhysicalDeviceFeatures features = { };
     features.wideLines = VK_TRUE;
     features.fillModeNonSolid = VK_TRUE;
+    features.samplerAnisotropy = VK_TRUE;
 
     std::vector<String> requestedLayers;
 

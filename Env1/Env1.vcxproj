@@ -148,6 +148,9 @@
   <ItemGroup>
     <ClCompile Include="env1.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Spiral.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

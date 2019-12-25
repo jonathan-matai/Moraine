@@ -1,6 +1,5 @@
+#include "mrn_core.h"
 #include "mrn_window_win32.h"
-
-#include <Windows.h>
 
 moraine::Window_IWin32::Window_IWin32(const WindowDesc& description, Logfile logfile) :
     m_instance(GetModuleHandleW(nullptr)),

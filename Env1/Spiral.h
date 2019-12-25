@@ -11,8 +11,6 @@ public:
         float       angleRad;
     };
 
-    int i = sizeof(ConstantBufferData);
-
     static std::shared_ptr<mrn::GraphicsParameters> s_graphicsParameters;
 
     Spiral(mrn::float2 center, mrn::Color color) :

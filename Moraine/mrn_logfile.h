@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 namespace moraine
 {
     struct DebugInfo

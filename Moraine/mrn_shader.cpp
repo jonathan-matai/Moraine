@@ -1,4 +1,6 @@
+#include "mrn_core.h"
 #include "mrn_shader.h"
+
 #include "mrn_shader_vk.h"
 
 moraine::Shader moraine::createShader(Stringr shader, GraphicsContext context)

@@ -1,8 +1,6 @@
+#include "mrn_core.h"
 #include "mrn_buffer_vk.h"
 
-#ifdef assert
-#undef assert
-#endif
 
 moraine::Buffer_IVulkan::Buffer_IVulkan(GraphicsContext context, size_t size, void* data, VkBufferUsageFlags usage, bool useVram, bool keepMapped) :
     m_context(std::static_pointer_cast<GraphicsContext_IVulkan>(context)),
@@ -20,29 +18,17 @@ moraine::Buffer_IVulkan::Buffer_IVulkan(GraphicsContext context, size_t size, vo
 
     if (not useVram)
     {
-        VmaAllocationCreateInfo allocationInfo = { };
-        allocationInfo.usage                    = VMA_MEMORY_USAGE_CPU_TO_GPU;
+        m_context->createVulkanBuffer(size, usage, VMA_MEMORY_USAGE_CPU_TO_GPU,
+                                      &m_buffer, &m_allocation, keepMapped ? &m_data : nullptr);
 
-        if (keepMapped)
+        if (data != nullptr)
         {
-            allocationInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-            VmaAllocationInfo allocInfo;
-            assert_vulkan(m_context->m_logfile, vmaCreateBuffer(m_context->m_allocator, &bufferInfo, &allocationInfo, &m_buffer, &m_allocation, &allocInfo), L"vmaCreateBuffer() failed", MRN_DEBUG_INFO);
-
-            m_data = allocInfo.pMappedData;
-
-            if(data != nullptr)
+            if (keepMapped)
                 memcpy_s(m_data, size, data, size);
-        }
-        else
-        {
-            assert_vulkan(m_context->m_logfile, vmaCreateBuffer(m_context->m_allocator, &bufferInfo, &allocationInfo, &m_buffer, &m_allocation, nullptr), L"vmaCreateBuffer failed", MRN_DEBUG_INFO);
-
-            if (data != nullptr)
+            else
             {
                 void* mappedMemory;
-                assert_vulkan(m_context->m_logfile, vmaMapMemory(m_context->m_allocator, m_allocation, &mappedMemory), L"vmaMapMemory() failed", MRN_DEBUG_INFO);
+                assert_vulkan(m_context->getLogfile(), vmaMapMemory(m_context->m_allocator, m_allocation, &mappedMemory), L"vmaMapMemory() failed", MRN_DEBUG_INFO);
                 memcpy_s(mappedMemory, size, data, size);
                 vmaUnmapMemory(m_context->m_allocator, m_allocation);
             }
@@ -50,38 +36,27 @@ moraine::Buffer_IVulkan::Buffer_IVulkan(GraphicsContext context, size_t size, vo
     }
     else
     {
-        bufferInfo.usage = usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-
-        VmaAllocationCreateInfo allocationInfo = { };
-        allocationInfo.usage                    = VMA_MEMORY_USAGE_CPU_ONLY;
-        allocationInfo.flags                    = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
         VkBuffer stagingBuffer;
         VmaAllocation stagingAllocation;
-        VmaAllocationInfo stagingInfo;
+        void* stagingMemory;
 
-        vmaCreateBuffer(m_context->m_allocator, &bufferInfo, &allocationInfo, &stagingBuffer, &stagingAllocation, &stagingInfo);
+        m_context->createVulkanBuffer(size, usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY,
+                                      &stagingBuffer, &stagingAllocation, &stagingMemory);
 
-        assert(m_context->m_logfile, data != nullptr, L"Invalid API Usage: Data for VRAM buffers must be provided!", MRN_DEBUG_INFO);
-        memcpy_s(stagingInfo.pMappedData, size, data, size);
+        assert(m_context->getLogfile(), data != nullptr, L"Invalid API Usage: Data for VRAM buffers must be provided!", MRN_DEBUG_INFO);
+        memcpy_s(stagingMemory, size, data, size);
 
-        VmaAllocationCreateInfo allocationInfo2 = { };
-        allocationInfo2.usage                   = VMA_MEMORY_USAGE_GPU_ONLY;
+        m_context->createVulkanBuffer(size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY,
+                                      &m_buffer, &m_allocation, nullptr);
 
-        bufferInfo.usage = usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-        vmaCreateBuffer(m_context->m_allocator, &bufferInfo, &allocationInfo2, &m_buffer, &m_allocation, nullptr);
-
-        VkBuffer dstBuffer = m_buffer;
-
-        m_context->dispatchTask(m_context->m_transferQueue, [size, dstBuffer, stagingBuffer](VkCommandBuffer buffer)
+        m_context->dispatchTask(m_context->m_transferQueue, [size, this, stagingBuffer](VkCommandBuffer buffer)
         {
             VkBufferCopy copy;
             copy.srcOffset = 0;
             copy.dstOffset = 0;
             copy.size      = size;
 
-            vkCmdCopyBuffer(buffer, stagingBuffer, dstBuffer, 1, &copy);
+            vkCmdCopyBuffer(buffer, stagingBuffer, m_buffer, 1, &copy);
         });
 
         vmaDestroyBuffer(m_context->m_allocator, stagingBuffer, stagingAllocation);
@@ -93,14 +68,11 @@ moraine::Buffer_IVulkan::~Buffer_IVulkan()
     vmaDestroyBuffer(m_context->m_allocator, m_buffer, m_allocation);
 }
 
-size_t moraine::Buffer_IVulkan::getAlignedSize(size_t rawSize, size_t alignment)
+moraine::VertexBuffer_IVulkan::VertexBuffer_IVulkan(GraphicsContext context, size_t size, void* data, bool frequentUpdate, size_t reservedSize) :
+    Buffer_IVulkan(context, max(size, reservedSize), data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, not frequentUpdate, frequentUpdate)
 {
-    return alignment > 0 ? (rawSize + alignment - 1) & ~(alignment - 1) : rawSize;
-}
-
-moraine::VertexBuffer_IVulkan::VertexBuffer_IVulkan(GraphicsContext context, size_t size, void* data) :
-    Buffer_IVulkan(context, size, data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, true, false)
-{
+    m_usedSize = size;
+    m_reservedSize = max(size, reservedSize);
 }
 
 moraine::VertexBuffer_IVulkan::~VertexBuffer_IVulkan()
@@ -110,6 +82,12 @@ moraine::VertexBuffer_IVulkan::~VertexBuffer_IVulkan()
 void moraine::VertexBuffer_IVulkan::bind(VkCommandBuffer buffer, uint32_t binding, size_t offset)
 {
     vkCmdBindVertexBuffers(buffer, binding, 1, &m_buffer, &offset);
+}
+
+void* moraine::VertexBuffer_IVulkan::data()
+{
+    assert(m_context->getLogfile(), m_data, L"Vertex Buffer not host visible!", MRN_DEBUG_INFO);
+    return m_data;
 }
 
 moraine::IndexBuffer_IVulkan::IndexBuffer_IVulkan(GraphicsContext context, size_t indexCount, uint32_t* indexData) :
@@ -154,7 +132,7 @@ void* moraine::ConstantBuffer_IVulkan::data(uint32_t frameIndex)
     return static_cast<uint8_t*>(m_data) + frameIndex * m_elementAlignedSize;
 }
 
-moraine::ConstantArray_IVulkan::ConstantArray_IVulkan(GraphicsContext context, size_t elementSize, size_t initialElementCount, bool updateEveryFrame) :
+moraine::ConstantArray_IVulkan::ConstantArray_IVulkan(GraphicsContext context, size_t elementSize, uint32_t initialElementCount, bool updateEveryFrame) :
     Buffer_IVulkan(context,
                    getAlignedSize(elementSize, std::static_pointer_cast<GraphicsContext_IVulkan>(context)->m_physicalDevice.deviceProperties.limits.minUniformBufferOffsetAlignment) *
                        initialElementCount *
@@ -178,7 +156,7 @@ moraine::ConstantArray_IVulkan::~ConstantArray_IVulkan()
 
 uint32_t moraine::ConstantArray_IVulkan::addElement()
 {
-    uint32_t index = (reinterpret_cast<size_t>(m_head) - reinterpret_cast<size_t>(m_data)) / m_elementAlignedSize;
+    uint32_t index = static_cast<uint32_t>((reinterpret_cast<size_t>(m_head) - reinterpret_cast<size_t>(m_data)) / m_elementAlignedSize);
 
     m_head = *reinterpret_cast<void**>(m_head);
 
@@ -202,7 +180,7 @@ uint32_t moraine::ConstantArray_IVulkan::addElement()
         VkBuffer buffer;
         VmaAllocation allocation;
 
-        assert_vulkan(m_context->m_logfile, vmaCreateBuffer(m_context->m_allocator, &bufferInfo, &allocationInfo, &buffer, &allocation, &allocInfo), L"", MRN_DEBUG_INFO);
+        assert_vulkan(m_context->getLogfile(), vmaCreateBuffer(m_context->m_allocator, &bufferInfo, &allocationInfo, &buffer, &allocation, &allocInfo), L"", MRN_DEBUG_INFO);
 
         if (m_perFrameData)
         {
@@ -278,4 +256,42 @@ void* moraine::ConstantArray_IVulkan::data(uint32_t frameIndex, uint32_t element
         return static_cast<uint8_t*>(m_data) +  m_elementAlignedSize * (frameIndex * m_reservedElementCount + elementIndex);
     else
         return static_cast<uint8_t*>(m_data) + elementIndex * m_elementAlignedSize;
+}
+
+
+
+
+moraine::StagingStack_IVulkan::StagingStack_IVulkan(GraphicsContext context, size_t size)
+    : Buffer_IVulkan(context, size, nullptr, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, false, true),
+    m_head(m_data),
+    m_end(static_cast<uint8_t*>(m_data) + size)
+{
+}
+
+moraine::StagingStack_IVulkan::~StagingStack_IVulkan()
+{
+}
+
+moraine::StagingStackMarker moraine::StagingStack_IVulkan::createMarker()
+{
+    return m_head; // Return current position of head
+}
+
+void* moraine::StagingStack_IVulkan::alloc(size_t size, size_t alignment)
+{
+    void* head = m_head = getAlignedPointer(m_head, alignment); // Align head and copy it
+    m_head = static_cast<uint8_t*>(m_head) + size; // Move head by size
+
+    if (m_head >= m_end) // Stack overflow
+        throw std::exception("Stack overflow");
+
+    return head; // Return copied head
+}
+
+void moraine::StagingStack_IVulkan::free(StagingStackMarker m)
+{
+    if (m > m_data and m < m_end)
+        m_head = m; // Set head back to marker
+    else
+        throw std::exception("Invalid StaginStackMarker!");
 }

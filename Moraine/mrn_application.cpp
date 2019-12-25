@@ -1,3 +1,4 @@
+#include "mrn_core.h"
 #include "mrn_application.h"
 
 #include "mrn_renderer.h"
@@ -51,9 +52,9 @@ namespace moraine
             return moraine::createTexture(m_gfxContext, texture);
         }
 
-        VertexBuffer createVertexBuffer(size_t size, void* data) override
+        VertexBuffer createVertexBuffer(size_t size, void* data, bool frequentUpdate, size_t reservedSize) override
         {
-            return moraine::createVertexBuffer(m_gfxContext, size, data);
+            return moraine::createVertexBuffer(m_gfxContext, size, data, frequentUpdate, reservedSize);
         }
 
         IndexBuffer createIndexBuffer(size_t indexCount, uint16_t* indexData) override
@@ -71,9 +72,14 @@ namespace moraine
             return moraine::createConstantBuffer(m_gfxContext, size, updateEveryFrame);
         }
 
-        ConstantArray createConstantArray(size_t elementSize, size_t initialElementCount, bool updateEveryFrame) override
+        ConstantArray createConstantArray(size_t elementSize, uint32_t initialElementCount, bool updateEveryFrame) override
         {
             return moraine::createConstantArray(m_gfxContext, elementSize, initialElementCount, updateEveryFrame);
+        }
+
+        Font createFont(Stringr ttfFile, uint32_t maxPixelHeight) override
+        {
+            return moraine::createFont(m_gfxContext, ttfFile, maxPixelHeight);
         }
 
         void addLayer(Layer layer) override

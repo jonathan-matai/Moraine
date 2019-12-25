@@ -3,9 +3,6 @@
 #include "mrn_shader.h"
 
 #include "mrn_gfxcontext_vk.h"
-
-#include <vulkan/vulkan.h>
-#include <fstream>
 #include <json.h>
 
 namespace moraine
@@ -19,7 +16,7 @@ namespace moraine
 
         void bind(VkCommandBuffer buffer);
 
-        void compileShaderStage(std::string path, std::vector<VkPipelineShaderStageCreateInfo>& outStage, std::vector<VkShaderModule>& outModule, VkShaderStageFlagBits stage);
+        void compileShaderStage(Stringr path, std::vector<VkPipelineShaderStageCreateInfo>& outStage, std::vector<VkShaderModule>& outModule, VkShaderStageFlagBits stage);
 
         void createVertexInputState(Json::Value& jsonfile, std::vector<VkVertexInputBindingDescription>& bindings, std::vector<VkVertexInputAttributeDescription>& attributes, Stringr fileName);
         void createPipelineLayout(Json::Value& jsonfile, Stringr fileName);

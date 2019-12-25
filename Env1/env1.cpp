@@ -37,7 +37,7 @@ int main()
         { { -0.3f, -0.3f }, { 0.0f, 0.0f } }
     } };
 
-    mrn::VertexBuffer vertexBuffer = app->createVertexBuffer(verticies.size() * sizeof(Vertex), verticies.data());
+    mrn::VertexBuffer vertexBuffer = app->createVertexBuffer(verticies.size() * sizeof(Vertex), verticies.data(), false, 0);
 
     std::array<uint16_t, 6> indicies { 0, 1, 2, 2, 3, 0 };
 
@@ -52,16 +52,23 @@ int main()
                                                                              std::initializer_list<mrn::VertexBuffer>{ vertexBuffer }, 
                                                                              std::initializer_list<mrn::ConstantSet>{ constantSet }, 
                                                                              std::initializer_list<mrn::ConstantArray>{ constantArray },
-                                                                             std::initializer_list<mrn::ObjectType>{ UINT32_MAX },
+                                                                             std::initializer_list<uint32_t>{ UINT32_MAX },
                                                                              6,
                                                                              1);
 
+    mrn::Font font = app->createFont(L"C:\\Users\\zehre\\AppData\\Local\\Microsoft\\Windows\\Fonts\\CascadiaCode-Regular-VTT.ttf", 300);
+
+    //mrn::GraphicsString str = mrn::createGraphicsString(L"Hello World", font, 100, 50, 50);
+
     mrn::Layer layer = mrn::createLayer(L"Spiral Layer");
+
 
     layer->add(std::make_unique<Spiral>(mrn::float2(-0.5f, -0.5f), mrn::RED));
     layer->add(std::make_unique<Spiral>(mrn::float2(+0.5f, -0.5f), mrn::BLUE));
     layer->add(std::make_unique<Spiral>(mrn::float2(+0.5f, +0.5f), mrn::GREEN));
     layer->add(std::make_unique<Spiral>(mrn::float2(-0.5f, +0.5f), mrn::ORANGE));
+
+    layer->add(std::make_unique<mrn::GraphicsString_T>(L"Hello World", font, 100, 50, 50, 0));
 
     app->addLayer(layer);
 

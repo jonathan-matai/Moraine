@@ -1,10 +1,9 @@
 #pragma once
 
-#include "mrn_core.h"
-#include "mrn_shader.h"
-
 namespace moraine
 {
+    MRN_DECLARE_HANDLE(Shader)
+
     enum ConstantResourceType
     {
         CONSTANT_RESOURCE_TYPE_CONSTANT_BUFFER,

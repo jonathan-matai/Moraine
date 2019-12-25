@@ -16,20 +16,38 @@ namespace moraine
         VkBuffer m_buffer;
         void* m_data;
         std::shared_ptr<GraphicsContext_IVulkan> m_context;
+    };
 
-        static size_t getAlignedSize(size_t rawSize, size_t alignment);
+    class StagingStack_IVulkan : public StagingStack_T, Buffer_IVulkan
+    {
+    public:
+
+        StagingStack_IVulkan(GraphicsContext context, size_t size);
+        ~StagingStack_IVulkan() override;
+
+        StagingStackMarker createMarker() override;
+        void* alloc(size_t size, size_t alignment = alignof(void*)) override;
+        void free(StagingStackMarker m = 0) override;
+
+        void* getStart() const { return m_data; }
+        VkBuffer getBuffer() const { return m_buffer; }
+
+    private:
+
+        void* m_head;
+        void* m_end;
     };
 
     class VertexBuffer_IVulkan : public VertexBuffer_T, Buffer_IVulkan
     {
     public:
 
-        VertexBuffer_IVulkan(GraphicsContext context, size_t size, void* data);
+        VertexBuffer_IVulkan(GraphicsContext context, size_t size, void* data, bool frequentUpdate, size_t reservedSize);
         ~VertexBuffer_IVulkan() override;
 
-        inline VkBuffer getBuffer() const { return m_buffer; }
-
         void bind(VkCommandBuffer buffer, uint32_t binding, size_t offset);
+
+        void* data() override;
     };
 
     class IndexBuffer_IVulkan : public IndexBuffer_T, Buffer_IVulkan
@@ -68,7 +86,7 @@ namespace moraine
 
     public:
 
-        ConstantArray_IVulkan(GraphicsContext context, size_t elementSize, size_t initialElementCount, bool updateEveryFrame);
+        ConstantArray_IVulkan(GraphicsContext context, size_t elementSize, uint32_t initialElementCount, bool updateEveryFrame);
         ~ConstantArray_IVulkan() override;
 
         uint32_t addElement() override;

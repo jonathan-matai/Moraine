@@ -37,4 +37,24 @@ namespace moraine
     {
         return static_cast<T>(radians / PI * 180);
     }
+
+    template<typename T>
+    struct Rectangle
+    {
+    public:
+
+        Rectangle(T _x, T _y, T _width, T _height) :
+            x(_x), y(_y), width(_width), height(_height)
+        { }
+
+        Rectangle() :
+            x(0), y(0), width(0), height(0)
+        { }
+
+        T x, y, width, height;
+    };
+
+    typedef Rectangle<float> RectangleF;
+    typedef Rectangle<int32_t> RectangleI;
+    typedef Rectangle<uint32_t> RectangleU;
 }

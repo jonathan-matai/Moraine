@@ -1,6 +1,5 @@
 #include "mrn_core.h"
 
-#include <vector>
 #include <Windows.h>
 #include <fcntl.h>
 #include <io.h>

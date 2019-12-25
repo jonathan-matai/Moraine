@@ -11,18 +11,6 @@
 
 #endif
 
-#ifdef assert
-#undef assert
-#endif
-
-#ifdef min
-#undef min
-#endif
-
-#ifdef max
-#undef max
-#endif
-
 #include "mrn_math.h"
 #include <memory>
 #include <initializer_list>
@@ -30,6 +18,10 @@
 #include <algorithm>
 #include <array>
 #include <list>
+#include <vector>
+#include <queue>
+
+#define MRN_DECLARE_HANDLE(name) class name##_T; typedef std::shared_ptr<name##_T> name;
 
 namespace moraine
 {
@@ -66,6 +58,16 @@ namespace mrn = moraine;
 
 namespace moraine
 {
+    inline size_t getAlignedSize(size_t rawSize, size_t alignment)
+    {
+        return alignment > 0 ? (rawSize + alignment - 1) & ~(alignment - 1) : rawSize;
+    }
+
+    inline void* getAlignedPointer(void* pointer, size_t alignment)
+    {
+        return alignment > 0 ? reinterpret_cast<void*>((reinterpret_cast<size_t>(pointer) + alignment - 1) & ~(alignment - 1)) : pointer;
+    }
+
     inline void assert(Logfile logfile, bool assertion, Stringr message, const DebugInfo& debugInfo)
     {
         if (not assertion)
@@ -74,4 +76,12 @@ namespace moraine
             throw std::exception();
         }
     }
+
+    struct Allocation
+    {
+        std::unique_ptr<uint8_t[]> allocation;
+        size_t size;
+    };
+
+    MRN_API Allocation loadFile(Logfile logfile, Stringr path);
 }

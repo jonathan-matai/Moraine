@@ -1,6 +1,5 @@
 #pragma once
 
-#include "mrn_core.h"
 #include "mrn_gfxcontext.h"
 
 namespace moraine

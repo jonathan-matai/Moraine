@@ -1,8 +1,11 @@
+#include "mrn_core.h"
 #include "mrn_shader_vk.h"
+
+#include <fstream>
 
 moraine::Shader_IVulkan::Shader_IVulkan(String shader, GraphicsContext context) :
     m_context(std::static_pointer_cast<GraphicsContext_IVulkan>(context)),
-    m_logfile(m_context->m_logfile),
+    m_logfile(m_context->getLogfile()),
     m_pipeline(VK_NULL_HANDLE),
     m_layout(VK_NULL_HANDLE)
 {
@@ -18,16 +21,16 @@ moraine::Shader_IVulkan::Shader_IVulkan(String shader, GraphicsContext context) 
     configFile.close();
 
     String path = shader;
-    *(strrchr(path.mbbuf(), '\\') + 1) = '\0';
+    *(wcsrchr(path.wcbuf(), L'\\') + 1) = L'\0';
 
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
     std::vector<VkShaderModule> shaderModules;
 
     if (jsonFile["vertexShader"]["spirvVulkan"].isString())
-        compileShaderStage(std::string(path.mbstr()) + jsonFile["vertexShader"]["spirvVulkan"].asString(), shaderStages, shaderModules, VK_SHADER_STAGE_VERTEX_BIT);
+        compileShaderStage(sprintf(L"%s%S", path.wcstr(), jsonFile["vertexShader"]["spirvVulkan"].asString().c_str()), shaderStages, shaderModules, VK_SHADER_STAGE_VERTEX_BIT);
 
     if (jsonFile["fragmentShader"]["spirvVulkan"].isString())
-        compileShaderStage(std::string(path.mbstr()) + jsonFile["fragmentShader"]["spirvVulkan"].asString(), shaderStages, shaderModules, VK_SHADER_STAGE_FRAGMENT_BIT);
+        compileShaderStage(sprintf(L"%s%S", path.wcstr(), jsonFile["fragmentShader"]["spirvVulkan"].asString().c_str()), shaderStages, shaderModules, VK_SHADER_STAGE_FRAGMENT_BIT);
 
     std::vector<VkVertexInputBindingDescription> bindings;
     std::vector<VkVertexInputAttributeDescription> attributes;
@@ -81,8 +84,8 @@ moraine::Shader_IVulkan::Shader_IVulkan(String shader, GraphicsContext context) 
                              topology.c_str(), shader.wcstr()), MRN_DEBUG_INFO);
     }
 
-    uint32_t width = dynamic_cast<GraphicsContext_IVulkan*>(context.get())->m_swapchainWidth;
-    uint32_t height = dynamic_cast<GraphicsContext_IVulkan*>(context.get())->m_swapchainHeight;
+    uint32_t width = dynamic_cast<GraphicsContext_IVulkan*>(context.get())->m_viewportWidth;
+    uint32_t height = dynamic_cast<GraphicsContext_IVulkan*>(context.get())->m_viewportHeight;
 
     VkViewport viewport;
     viewport.x                                  = 0;
@@ -277,25 +280,16 @@ void moraine::Shader_IVulkan::bind(VkCommandBuffer buffer)
     vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 }
 
-void moraine::Shader_IVulkan::compileShaderStage(std::string path, std::vector<VkPipelineShaderStageCreateInfo>& outStage, std::vector<VkShaderModule>& outModule, VkShaderStageFlagBits stage)
+void moraine::Shader_IVulkan::compileShaderStage(Stringr path, std::vector<VkPipelineShaderStageCreateInfo>& outStage, std::vector<VkShaderModule>& outModule, VkShaderStageFlagBits stage)
 {
-    std::ifstream binary(path.c_str(), std::ios::ate | std::ios::binary);
-
-    assert(m_logfile, binary.is_open(), sprintf(L"Couldn't open file \"%s\"!", path.c_str()), MRN_DEBUG_INFO);
-
-    size_t fileSize = static_cast<size_t>(binary.tellg());
-    char* buffer = new char[fileSize];
-    binary.seekg(0);
-    binary.read(buffer, fileSize);
-
-    binary.close();
+    auto binary = loadFile(m_logfile, path);
 
     VkShaderModuleCreateInfo vsmci;
     vsmci.sType             = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     vsmci.pNext             = nullptr;
     vsmci.flags             = 0;
-    vsmci.codeSize          = fileSize;
-    vsmci.pCode             = reinterpret_cast<const uint32_t*>(buffer);
+    vsmci.codeSize          = binary.size;
+    vsmci.pCode             = reinterpret_cast<const uint32_t*>(binary.allocation.get());
 
     VkShaderModule module;
 
@@ -312,8 +306,6 @@ void moraine::Shader_IVulkan::compileShaderStage(std::string path, std::vector<V
 
     outStage.push_back(vpssci);
     outModule.push_back(module);
-
-    delete[] buffer;
 }
 
 
@@ -502,7 +494,7 @@ void moraine::Shader_IVulkan::createPipelineLayout(Json::Value& jsonfile, String
             vdslci.bindingCount                    = static_cast<uint32_t>(bindings.size());
             vdslci.pBindings                       = bindings.data();
 
-            assert_vulkan(m_context->m_logfile, vkCreateDescriptorSetLayout(m_context->m_device, &vdslci, nullptr, &m_descriptorLayouts[i]), L"vkCreateDescriptorSetLayout() failed", MRN_DEBUG_INFO);
+            assert_vulkan(m_logfile, vkCreateDescriptorSetLayout(m_context->m_device, &vdslci, nullptr, &m_descriptorLayouts[i]), L"vkCreateDescriptorSetLayout() failed", MRN_DEBUG_INFO);
         }
     }
     

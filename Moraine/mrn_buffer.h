@@ -1,21 +1,47 @@
 #pragma once
 
-#include "mrn_core.h"
-#include "mrn_gfxcontext.h"
 #include "mrn_constset.h"
 
 namespace moraine
 {
+    MRN_DECLARE_HANDLE(GraphicsContext)
+
+    typedef void* StagingStackMarker;
+
+    class StagingStack_T
+    {
+    public:
+
+        virtual ~StagingStack_T() = default;
+
+        virtual StagingStackMarker createMarker() = 0;
+        virtual void* alloc(size_t size, size_t alignment = alignof(void*)) = 0;
+        virtual void free(StagingStackMarker m = 0) = 0;
+    };
+
+    typedef std::shared_ptr<StagingStack_T> StagingStack;
+
+    MRN_API StagingStack createStagingStack(GraphicsContext context, size_t sizeInBytes);
+
     class VertexBuffer_T
     {
     public:
 
         virtual ~VertexBuffer_T() = default;
+
+        size_t size() const { return m_usedSize; }
+
+        virtual void* data() = 0;
+
+    protected:
+
+        size_t m_usedSize;
+        size_t m_reservedSize;
     };
 
     typedef std::shared_ptr<VertexBuffer_T> VertexBuffer;
 
-    MRN_API VertexBuffer createVertexBuffer(GraphicsContext context, size_t size, void* data);
+    MRN_API VertexBuffer createVertexBuffer(GraphicsContext context, size_t size, void* data, bool frequentUpdate, size_t reservedSize = 0);
 
     class IndexBuffer_T
     {
@@ -64,5 +90,5 @@ namespace moraine
 
     typedef std::shared_ptr<ConstantArray_T> ConstantArray;
 
-    MRN_API ConstantArray createConstantArray(GraphicsContext context, size_t elementSize, size_t initialElementCount, bool updateEveryFrame);
+    MRN_API ConstantArray createConstantArray(GraphicsContext context, size_t elementSize, uint32_t initialElementCount, bool updateEveryFrame);
 }

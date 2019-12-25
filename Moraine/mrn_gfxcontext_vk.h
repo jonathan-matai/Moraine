@@ -3,10 +3,6 @@
 #include "mrn_gfxcontext.h"
 
 #include <vulkan/vulkan.h>
-
-#include <vector>
-#include <bitset>
-
 #include <vk_mem_alloc.h>
 
 #ifdef _WIN32
@@ -56,7 +52,7 @@ namespace moraine
         }
     }
 
-    inline void assert_vulkan(Logfile& logfile, VkResult assertion, Stringr message, const DebugInfo& debugInfo)
+    inline void assert_vulkan(Logfile logfile, VkResult assertion, Stringr message, const DebugInfo& debugInfo)
     {
         if (assertion != VK_SUCCESS)
         {
@@ -73,30 +69,9 @@ namespace moraine
 
         ~GraphicsContext_IVulkan() override;
 
-        VkBool32 __stdcall debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData);
+        
 
         void addAsyncTask(std::function<void(uint32_t)> perFrameTasks, std::function<void()> finalizationTask);
-
-        void createVulkanInstance();
-        void setupValidation();
-        void createPhysicalDevice();
-        void createLogicalDevice();
-        void createVulkanSurface();
-        void createSwapchain();
-        void createRenderPass();
-        void createFrameBuffers();
-
-        struct PhysicalDevice
-        {
-            VkPhysicalDevice                        device;
-            VkPhysicalDeviceProperties              deviceProperties;
-            VkPhysicalDeviceFeatures                deviceFeatures;
-            VkPhysicalDeviceMemoryProperties        memoryProperties;
-            std::vector<VkQueueFamilyProperties>    queueFamilyProperties;
-            VkSurfaceCapabilitiesKHR                surfaceProperites;
-        };
 
         struct Queue
         {
@@ -109,14 +84,28 @@ namespace moraine
             uint32_t queueFamilyIndex;
         };
 
-        struct AsyncTask
-        {
-            std::function<void(uint32_t)> perFrameTasks;
-            uint32_t completedFramesBitset;
-            std::function<void()> finalizationTask;
-        };
+        
 
         void dispatchTask(Queue queue, std::function<void(VkCommandBuffer)> task);
+
+        // Vulkan Helpers
+
+        void createVulkanBuffer(size_t size, VkBufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage,
+                                VkBuffer* out_buffer, VmaAllocation* out_allocation, void** mappedData);
+
+        void createVulkanImage(VkFormat format, uint32_t width, uint32_t height, VkImageUsageFlags usage,
+                               VkImage* out_image, VmaAllocation* out_allocation, VkImageView* out_imageView);
+
+    private:
+
+        void constructVulkanInstance();
+        void constructVulkanValidation();
+        void constructVulkanPhysicalDevice();
+        void constructVulkanLogicalDevice();
+        void constructVulkanSurface();
+        void constructVulkanSwapchain();
+        void constructVulkanRenderPass();
+        void constructVulkanFrameBuffers();
 
         std::vector<const char*> listAndEnableInstanceLayers(std::vector<String>& requestedLayers);
         std::vector<const char*> listAndEnableInstanceExtensions(std::vector<String>& requestedExtensions);
@@ -125,13 +114,35 @@ namespace moraine
         VkSurfaceFormatKHR       getSurfaceFormat();
         VkPresentModeKHR         getPresentMode(bool useTripleBuffering);
 
+        VkBool32 __stdcall debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData);
+
         bool getQueue(Queue& out_queue, std::vector<VkDeviceQueueCreateInfo>& out_vdqci, VkQueueFlags flags, bool present);
         void activateQueue(Queue& queue);
         
         static constexpr float s_vulkanQueuePriorities[16] = { 1.0f };
 
+    public:
+
+        struct PhysicalDevice
+        {
+            VkPhysicalDevice                        device;
+            VkPhysicalDeviceProperties              deviceProperties;
+            VkPhysicalDeviceFeatures                deviceFeatures;
+            VkPhysicalDeviceMemoryProperties        memoryProperties;
+            std::vector<VkQueueFamilyProperties>    queueFamilyProperties;
+            VkSurfaceCapabilitiesKHR                surfaceProperites;
+        };
+
+        struct AsyncTask
+        {
+            std::function<void(uint32_t)> perFrameTasks;
+            uint32_t completedFramesBitset;
+            std::function<void()> finalizationTask;
+        };
+
         GraphicsContextDesc         m_description;
-        Logfile                     m_logfile;
         Window                      m_window;
         VkInstance                  m_instance;
         VkDebugUtilsMessengerEXT    m_messenger;
@@ -142,8 +153,6 @@ namespace moraine
         VkFormat                    m_swapchainFormat;
         std::vector<VkImage>        m_swapchainImages;
         std::vector<VkImageView>    m_swapchainImageViews;
-        uint32_t                    m_swapchainWidth;
-        uint32_t                    m_swapchainHeight;
         std::vector<VkFramebuffer>  m_frameBuffers;
         VkRenderPass                m_renderPass;
         VkImage                     m_colorImage;

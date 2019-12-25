@@ -5,3 +5,4 @@
 #include "mrn_application.h"
 #include "mrn_object_graphics.h"
 #include "mrn_layer.h"
+#include "mrn_gfxstring.h"

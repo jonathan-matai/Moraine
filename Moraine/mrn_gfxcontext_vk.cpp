@@ -1,24 +1,23 @@
-#define VMA_IMPLEMENTATION
-#include <vk_mem_alloc.h>
-
+#include "mrn_core.h"
 #include "mrn_gfxcontext_vk.h"
 
-#pragma comment(lib, "vulkan-1.lib")
+#include <bitset>
+
 
 moraine::GraphicsContext_IVulkan::GraphicsContext_IVulkan(const GraphicsContextDesc& desc, Logfile logfile, Window window) :
+    GraphicsContext_T(logfile),
     m_description(desc),
     m_instance(0),
     m_messenger(0),
-    m_logfile(logfile),
     m_window(window)
 {
-    createVulkanInstance();
-    createVulkanSurface();
-    createPhysicalDevice();
-    createLogicalDevice();
-    createSwapchain();
-    createRenderPass();
-    createFrameBuffers();
+    constructVulkanInstance();
+    constructVulkanSurface();
+    constructVulkanPhysicalDevice();
+    constructVulkanLogicalDevice();
+    constructVulkanSwapchain();
+    constructVulkanRenderPass();
+    constructVulkanFrameBuffers();
 
     VmaAllocatorCreateInfo vmaaci = { };
     vmaaci.device = m_device;
@@ -63,7 +62,7 @@ moraine::GraphicsContext_IVulkan::~GraphicsContext_IVulkan()
 }
 
 
-void moraine::GraphicsContext_IVulkan::createVulkanInstance()
+void moraine::GraphicsContext_IVulkan::constructVulkanInstance()
 {
     Time start = Time::now();
 
@@ -111,11 +110,11 @@ void moraine::GraphicsContext_IVulkan::createVulkanInstance()
     m_logfile->print(WHITE, sprintf(L"Created VkInstance (%.3f ms)", Time::duration(start, Time::now()).getMillisecondsF()));
 
     if (m_description.enableValidation)
-        setupValidation();
+        constructVulkanValidation();
 }
 
 
-void moraine::GraphicsContext_IVulkan::setupValidation()
+void moraine::GraphicsContext_IVulkan::constructVulkanValidation()
 {
     Time start = Time::now();
 
@@ -152,7 +151,7 @@ void moraine::GraphicsContext_IVulkan::setupValidation()
 }
 
 
-void moraine::GraphicsContext_IVulkan::createPhysicalDevice()
+void moraine::GraphicsContext_IVulkan::constructVulkanPhysicalDevice()
 {
     uint32_t n_devices;
     assert_vulkan(m_logfile, vkEnumeratePhysicalDevices(m_instance, &n_devices, nullptr), L"vkEnumeratePhysicalDevices() failed", MRN_DEBUG_INFO);
@@ -570,7 +569,7 @@ void moraine::GraphicsContext_IVulkan::createPhysicalDevice()
 }
 
 
-void moraine::GraphicsContext_IVulkan::createLogicalDevice()
+void moraine::GraphicsContext_IVulkan::constructVulkanLogicalDevice()
 {
     Time start = Time::now();
 
@@ -632,7 +631,7 @@ void moraine::GraphicsContext_IVulkan::createLogicalDevice()
 }
 
 
-void moraine::GraphicsContext_IVulkan::createVulkanSurface()
+void moraine::GraphicsContext_IVulkan::constructVulkanSurface()
 {
     Window_IWin32* window = dynamic_cast<Window_IWin32*>(&*m_window);
 
@@ -647,15 +646,15 @@ void moraine::GraphicsContext_IVulkan::createVulkanSurface()
 }
 
 
-void moraine::GraphicsContext_IVulkan::createSwapchain()
+void moraine::GraphicsContext_IVulkan::constructVulkanSwapchain()
 {
     Time start = Time::now();
 
     VkSurfaceFormatKHR format = getSurfaceFormat();
 
     m_swapchainFormat = format.format;
-    m_swapchainWidth = m_physicalDevice.surfaceProperites.currentExtent.width;
-    m_swapchainHeight = m_physicalDevice.surfaceProperites.currentExtent.height;
+    m_viewportWidth = m_physicalDevice.surfaceProperites.currentExtent.width;
+    m_viewportHeight = m_physicalDevice.surfaceProperites.currentExtent.height;
 
     VkSwapchainCreateInfoKHR vsci;
     vsci.sType                                  = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -710,7 +709,7 @@ void moraine::GraphicsContext_IVulkan::createSwapchain()
 }
 
 
-void moraine::GraphicsContext_IVulkan::createRenderPass()
+void moraine::GraphicsContext_IVulkan::constructVulkanRenderPass()
 {
     std::vector<VkAttachmentDescription> attachments(1);
 
@@ -765,7 +764,7 @@ void moraine::GraphicsContext_IVulkan::createRenderPass()
 }
 
 
-void moraine::GraphicsContext_IVulkan::createFrameBuffers()
+void moraine::GraphicsContext_IVulkan::constructVulkanFrameBuffers()
 {
     m_frameBuffers.resize(m_swapchainImages.size());
 
@@ -778,8 +777,8 @@ void moraine::GraphicsContext_IVulkan::createFrameBuffers()
         vfbci.renderPass                         = m_renderPass;  
         vfbci.attachmentCount                    = 1;
         vfbci.pAttachments                       = &m_swapchainImageViews[i];
-        vfbci.width                              = m_swapchainWidth;
-        vfbci.height                             = m_swapchainHeight;
+        vfbci.width                              = m_viewportWidth;
+        vfbci.height                             = m_viewportHeight;
         vfbci.layers                             = 1;
 
         assert_vulkan(m_logfile, vkCreateFramebuffer(m_device, &vfbci, nullptr, &m_frameBuffers[i]), L"vkCreateFramebuffer() failed", MRN_DEBUG_INFO);
@@ -838,6 +837,77 @@ void moraine::GraphicsContext_IVulkan::dispatchTask(Queue queue, std::function<v
     vkDestroyFence(m_device, fence, nullptr);
     vkFreeCommandBuffers(m_device, m_mainThreadCommandPools[queue.queueFamilyIndex], 1, &buffer);
 }
+
+
+
+void moraine::GraphicsContext_IVulkan::createVulkanBuffer(size_t size, VkBufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage, VkBuffer* out_buffer, VmaAllocation* out_allocation, void** mappedData)
+{
+    VkBufferCreateInfo vbci;
+    vbci.sType                          = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    vbci.pNext                          = nullptr;
+    vbci.flags                          = 0;
+    vbci.size                           = size;
+    vbci.usage                          = bufferUsage;
+    vbci.sharingMode                    = VK_SHARING_MODE_EXCLUSIVE;
+    vbci.queueFamilyIndexCount          = 0;
+    vbci.pQueueFamilyIndices            = nullptr;
+
+    VmaAllocationCreateInfo vaci = { };
+    vaci.usage                          = memoryUsage;
+    vaci.flags                          = 0;
+
+    if (mappedData == nullptr)
+        assert_vulkan(m_logfile, vmaCreateBuffer(m_allocator, &vbci, &vaci, out_buffer, out_allocation, nullptr), L"vmaCreateBuffer() failed", MRN_DEBUG_INFO);
+    else
+    {
+        vaci.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        VmaAllocationInfo allocationInfo;
+        assert_vulkan(m_logfile, vmaCreateBuffer(m_allocator, &vbci, &vaci, out_buffer, out_allocation, &allocationInfo), L"vmaCreateBuffer() failed", MRN_DEBUG_INFO);
+        *mappedData = allocationInfo.pMappedData;
+    }
+}
+
+void moraine::GraphicsContext_IVulkan::createVulkanImage(VkFormat format, uint32_t width, uint32_t height, VkImageUsageFlags usage, VkImage* out_image, VmaAllocation* out_allocation, VkImageView* out_imageView)
+{
+    VkImageCreateInfo image_info;
+    image_info.sType                                = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image_info.pNext                                = nullptr;
+    image_info.flags                                = 0;
+    image_info.imageType                            = VK_IMAGE_TYPE_2D;
+    image_info.format                               = format;
+    image_info.extent                               = { width, height, 1 };
+    image_info.mipLevels                            = 1;
+    image_info.arrayLayers                          = 1;
+    image_info.samples                              = VK_SAMPLE_COUNT_1_BIT;
+    image_info.tiling                               = VK_IMAGE_TILING_OPTIMAL;
+    image_info.usage                                = usage;
+    image_info.sharingMode                          = VK_SHARING_MODE_EXCLUSIVE;
+    image_info.queueFamilyIndexCount                = 0;
+    image_info.pQueueFamilyIndices                  = nullptr;
+    image_info.initialLayout                        = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    VmaAllocationCreateInfo allocation_info = { };
+    allocation_info.usage                           = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    assert_vulkan(m_logfile, vmaCreateImage(m_allocator, &image_info, &allocation_info, out_image, out_allocation, nullptr), L"vmaCreateBuffer() failed", MRN_DEBUG_INFO);
+
+    VkImageViewCreateInfo vivci;
+    vivci.sType                                     = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    vivci.pNext                                     = nullptr;
+    vivci.flags                                     = 0;
+    vivci.image                                     = *out_image;
+    vivci.viewType                                  = VK_IMAGE_VIEW_TYPE_2D;
+    vivci.format                                    = image_info.format;
+    vivci.components                                = { VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY };
+    vivci.subresourceRange.aspectMask               = VK_IMAGE_ASPECT_COLOR_BIT;
+    vivci.subresourceRange.baseMipLevel             = 0;
+    vivci.subresourceRange.levelCount               = 1;
+    vivci.subresourceRange.baseArrayLayer           = 0;
+    vivci.subresourceRange.layerCount               = 1;
+
+    assert_vulkan(m_logfile, vkCreateImageView(m_device, &vivci, nullptr, out_imageView), L"vkCreateImageView() failed", MRN_DEBUG_INFO);
+}
+
 
 
 std::vector<const char*> moraine::GraphicsContext_IVulkan::listAndEnableInstanceLayers(std::vector<String>& requestedLayers)

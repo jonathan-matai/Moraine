@@ -74,6 +74,12 @@
     <ClInclude Include="mrn_object_graphics.h">
       <Filter>layer</Filter>
     </ClInclude>
+    <ClInclude Include="mrn_font.h">
+      <Filter>graphics\2d</Filter>
+    </ClInclude>
+    <ClInclude Include="mrn_gfxstring.h">
+      <Filter>graphics\2d</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="core">
@@ -93,6 +99,9 @@
     </Filter>
     <Filter Include="layer">
       <UniqueIdentifier>{4e8fc1aa-704b-4f71-94fb-25f5592ff03b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="graphics\2d">
+      <UniqueIdentifier>{215c4b4d-b68d-41fe-8447-4f7276052b1d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -155,6 +164,15 @@
     </ClCompile>
     <ClCompile Include="mrn_layer.cpp">
       <Filter>layer</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_font.cpp">
+      <Filter>graphics\2d</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_core.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="mrn_gfxstring.cpp">
+      <Filter>graphics\2d</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

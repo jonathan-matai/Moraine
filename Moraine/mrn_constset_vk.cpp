@@ -1,3 +1,4 @@
+#include "mrn_core.h"
 #include "mrn_constset_vk.h"
 
 moraine::ConstantSet_IVulkan::ConstantSet_IVulkan(Shader shader, uint32_t set, std::initializer_list<std::pair<ConstantResource, uint32_t>> resources) :
@@ -14,7 +15,7 @@ moraine::ConstantSet_IVulkan::ConstantSet_IVulkan(Shader shader, uint32_t set, s
     vdpci.poolSizeCount                 = static_cast<uint32_t>(m_shader->m_desriptorPoolSizes[set].size());
     vdpci.pPoolSizes                    = m_shader->m_desriptorPoolSizes[set].data();
 
-    assert_vulkan(m_shader->m_context->m_logfile, vkCreateDescriptorPool(m_shader->m_context->m_device, &vdpci, nullptr, &m_descriptorPool), L"vkCreateDescriptorPool() failed", MRN_DEBUG_INFO);
+    assert_vulkan(m_shader->m_logfile, vkCreateDescriptorPool(m_shader->m_context->m_device, &vdpci, nullptr, &m_descriptorPool), L"vkCreateDescriptorPool() failed", MRN_DEBUG_INFO);
 
     std::vector<VkDescriptorSetLayout> layouts(nSwapchainImages, m_shader->m_descriptorLayouts[set]);
 
@@ -27,7 +28,7 @@ moraine::ConstantSet_IVulkan::ConstantSet_IVulkan(Shader shader, uint32_t set, s
     vdsai.descriptorSetCount            = nSwapchainImages;
     vdsai.pSetLayouts                   = layouts.data();
 
-    assert_vulkan(m_shader->m_context->m_logfile, vkAllocateDescriptorSets(m_shader->m_context->m_device, &vdsai, m_descriptorSets.data()), L"vkAllocateDescriptorSets() failed", MRN_DEBUG_INFO);
+    assert_vulkan(m_shader->m_logfile, vkAllocateDescriptorSets(m_shader->m_context->m_device, &vdsai, m_descriptorSets.data()), L"vkAllocateDescriptorSets() failed", MRN_DEBUG_INFO);
 
     updateDescriptorSets(resources);
 }
@@ -39,7 +40,7 @@ moraine::ConstantSet_IVulkan::~ConstantSet_IVulkan()
 
 void moraine::ConstantSet_IVulkan::bind(VkCommandBuffer buffer, uint32_t frameIndex, std::initializer_list<uint32_t> arrayIndicies)
 {
-    assert(m_shader->m_context->m_logfile, arrayIndicies.size() == m_arrayAlignedElementSizes.size(), L"Wrong API Usage: Not all arrayIndicies provided!", MRN_DEBUG_INFO);
+    assert(m_shader->m_context->getLogfile(), arrayIndicies.size() == m_arrayAlignedElementSizes.size(), L"Wrong API Usage: Not all arrayIndicies provided!", MRN_DEBUG_INFO);
 
     std::vector<uint32_t> offsets(arrayIndicies.size());
 
@@ -51,7 +52,7 @@ void moraine::ConstantSet_IVulkan::bind(VkCommandBuffer buffer, uint32_t frameIn
 
 void moraine::ConstantSet_IVulkan::bind(VkCommandBuffer buffer, uint32_t frameIndex, const std::vector<uint32_t>& arrayIndicies)
 {
-    assert(m_shader->m_context->m_logfile, arrayIndicies.size() == m_arrayAlignedElementSizes.size(), L"Wrong API Usage: Not all arrayIndicies provided!", MRN_DEBUG_INFO);
+    assert(m_shader->m_logfile, arrayIndicies.size() == m_arrayAlignedElementSizes.size(), L"Wrong API Usage: Not all arrayIndicies provided!", MRN_DEBUG_INFO);
 
     std::vector<uint32_t> offsets(arrayIndicies.size());
 
@@ -103,7 +104,7 @@ void moraine::ConstantSet_IVulkan::updateDescriptorSets(std::initializer_list<st
                 if (i == 0)
                 {
                     m_arrayAlignedElementSizes.push_back(std::make_pair(c->m_elementAlignedSize, b.second));
-                    c->m_constantSetBindings.push_back(std::make_pair(this, b.second));
+                    c->m_constantSetBindings.push_back(std::pair<ConstantSet_IVulkan*, uint32_t>(this, b.second));
                 }
 
                 break;
@@ -114,12 +115,18 @@ void moraine::ConstantSet_IVulkan::updateDescriptorSets(std::initializer_list<st
                 auto c = std::static_pointer_cast<Texture_IVulkan>(b.first);
                 imageInfos.push_back({ c->m_sampler, c->m_imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL });
                 writeSet.pImageInfo = reinterpret_cast<VkDescriptorImageInfo*>(imageInfos.size()); // write (vector index + 1) instead of pointer
+
+                if (i == 0)
+                {
+                    c->m_constantSetBindings.push_back(std::pair<ConstantSet_IVulkan*, uint32_t>(this, b.second));
+                }
+
                 break;
             }
 
             default:
             {
-                m_shader->m_context->m_logfile->print(RED, L"API ERROR: Unknown resource type!", MRN_DEBUG_INFO);
+                m_shader->m_logfile->print(RED, L"API ERROR: Unknown resource type!", MRN_DEBUG_INFO);
                 throw std::exception();
             }
             }
@@ -211,7 +218,7 @@ void moraine::ConstantSet_IVulkan::updateDescriptorSet(std::pair<ConstantResourc
 
     default:
     {
-        m_shader->m_context->m_logfile->print(RED, L"API ERROR: Unknown resource type!", MRN_DEBUG_INFO);
+        m_shader->m_logfile->print(RED, L"API ERROR: Unknown resource type!", MRN_DEBUG_INFO);
         throw std::exception();
     }
     }

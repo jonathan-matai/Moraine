@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -120,6 +120,8 @@
       <PreprocessorDefinitions>_DEBUG;MORAINE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>mrn_core.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,6 +157,8 @@
       <PreprocessorDefinitions>NDEBUG;MORAINE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>mrn_core.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -170,8 +174,10 @@
     <ClInclude Include="mrn_constset.h" />
     <ClInclude Include="mrn_constset_vk.h" />
     <ClInclude Include="mrn_core.h" />
+    <ClInclude Include="mrn_font.h" />
     <ClInclude Include="mrn_gfxcontext.h" />
     <ClInclude Include="mrn_gfxcontext_vk.h" />
+    <ClInclude Include="mrn_gfxstring.h" />
     <ClInclude Include="mrn_object_graphics.h" />
     <ClInclude Include="mrn_layer.h" />
     <ClInclude Include="mrn_logfile.h" />
@@ -192,12 +198,21 @@
     <ClInclude Include="mrn_window_win32.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\.ext\include\json.cpp" />
+    <ClCompile Include="..\.ext\include\json.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="mrn_application.cpp" />
     <ClCompile Include="mrn_constset.cpp" />
     <ClCompile Include="mrn_constset_vk.cpp" />
+    <ClCompile Include="mrn_core.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="mrn_font.cpp" />
     <ClCompile Include="mrn_gfxcontext.cpp" />
     <ClCompile Include="mrn_gfxcontext_vk.cpp" />
+    <ClCompile Include="mrn_gfxstring.cpp" />
     <ClCompile Include="mrn_layer.cpp" />
     <ClCompile Include="mrn_logfile.cpp" />
     <ClCompile Include="mrn_renderer.cpp" />

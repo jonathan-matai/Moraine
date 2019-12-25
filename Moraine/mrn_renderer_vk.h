@@ -1,12 +1,14 @@
 #pragma once
 
 #include "mrn_renderer.h"
+
 #include "mrn_gfxcontext_vk.h"
 #include "mrn_shader_vk.h"
 #include "mrn_buffer_vk.h"
 #include "mrn_constset_vk.h"
 #include "mrn_texture_vk.h"
 #include "mrn_object_graphics.h"
+#include "mrn_font.h"
 
 namespace moraine
 {
@@ -60,11 +62,14 @@ namespace moraine
 
         Shader t_shader;
         VertexBuffer t_vertexBuffer;
-        IndexBuffer t_indexBuffer;
-        ConstantBuffer t_constantBuffer;
-        ConstantSet t_constantSet;
-        ConstantArray t_constantArray;
+        //ConstantBuffer t_constantBuffer;
+        ConstantSet t_constantSet, t_constantSet2;
+        //ConstantArray t_constantArray;
         Texture t_texture;
+        //TextureAtlas t_atlas;
+
+        Font t_font;
+        Shader t_fontShader;
 
         std::list<Layer>* m_layerStack;
     };

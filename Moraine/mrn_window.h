@@ -1,7 +1,5 @@
 #pragma once
 
-#include "mrn_core.h"
-
 namespace moraine
 {
     struct WindowDesc
